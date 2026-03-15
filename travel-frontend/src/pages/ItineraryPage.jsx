@@ -33,7 +33,7 @@ const ItineraryPage = () => {
         // 2. Hàm gọi API Thời tiết thật từ OpenWeatherMap
         const fetchWeather = async () => {
             try {
-                const API_KEY = 'khê'; // <--- DÁN KEY VÀO ĐÂY
+                const API_KEY = 'điền key'; // <--- DÁN KEY VÀO ĐÂY
                 const CITY = 'Ho Chi Minh'; // Bạn có thể đổi thành Hanoi, Da Nang...
 
                 // Gọi API dự báo 5 ngày

@@ -143,4 +143,4 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 # Cấu hình Gemini API
-GEMINI_API_KEY = "private-key"
+GEMINI_API_KEY = "điền key"
