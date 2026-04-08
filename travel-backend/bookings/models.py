@@ -6,6 +6,7 @@ class Booking(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
         ('Confirmed', 'Confirmed'),
+        ('Paid', 'Paid'),
         ('Cancelled', 'Cancelled'),
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')

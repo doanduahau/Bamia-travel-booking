@@ -17,8 +17,7 @@ const Login = () => {
                 password
             });
             // Lưu token vào local storage qua hàm login của context
-            login(response.data.access);
-            localStorage.setItem('refresh_token', response.data.refresh);
+            login(response.data.access, response.data.refresh);
         } catch (err) {
             setError('Sai tài khoản hoặc mật khẩu!');
         }

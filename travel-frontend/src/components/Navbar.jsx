@@ -25,7 +25,7 @@ const Navbar = () => {
                                 </Link>
                                 {/* Nút Lịch sử đặt tour mới thêm */}
                                 <Link to="/my-bookings" className="text-white hover:text-blue-300 font-medium">
-                                    Đơn hàng của tôi
+                                    Đơn hàng
                                 </Link>
                                 {user.username === 'admin' && (
                                     <Link to="/admin-dashboard" className="text-purple-600 hover:text-purple-800 font-bold border border-purple-200 bg-purple-50 px-3 py-1 rounded-md">

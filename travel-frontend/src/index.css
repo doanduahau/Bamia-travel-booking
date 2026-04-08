@@ -5,3 +5,32 @@
 body {
   background-color: #f8fafc; /* Màu nền xám nhạt */
 }
+
+/* Đồng đều kích thước các ô calendar */
+.calendar-container .fc .fc-daygrid-day-frame {
+  min-height: 132px;
+  height: 132px;
+  overflow: visible;
+}
+
+.calendar-container .fc .fc-daygrid-day-events {
+  margin-top: 4px;
+  min-height: 42px;
+  overflow: visible;
+}
+
+.calendar-container .fc .fc-daygrid-event-harness {
+  margin-top: 2px !important;
+}
+
+.calendar-container .fc .fc-daygrid-day-top {
+  min-height: 62px;
+}
+
+.calendar-container .fc .fc-toolbar .fc-button {
+  padding: 0.5rem 0.8rem;
+  font-size: 1.05rem;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 40px;
+}

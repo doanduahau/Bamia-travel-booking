@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Clock, Star } from 'lucide-react';
 
+const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://127.0.0.1:8000';
+
 const TourCard = ({ tour }) => {
     // --- ĐOẠN XỬ LÝ ẢNH THÔNG MINH ĐÃ ĐƯỢC CẬP NHẬT ---
     let imageUrl = 'https://via.placeholder.com/400x300?text=No+Image';
@@ -15,7 +17,7 @@ const TourCard = ({ tour }) => {
         else {
             // Đảm bảo không bị dư hoặc thiếu dấu gạch chéo
             const imagePath = tour.image.startsWith('/') ? tour.image : `/${tour.image}`;
-            imageUrl = `http://127.0.0.1:8000${imagePath}`;
+            imageUrl = `${BACKEND_BASE_URL}${imagePath}`;
         }
     }
     // --- KẾT THÚC ĐOẠN XỬ LÝ ẢNH ---

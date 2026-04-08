@@ -1,30 +1,40 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .models import Tour, Destination
-from .serializers import TourSerializer, DestinationSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-import google.generativeai as genai
 from django.conf import settings
+
+from google import genai
+from google.genai import types
+
+from .models import Tour, Destination, Category
+from .serializers import TourSerializer, DestinationSerializer, CategorySerializer
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
 class DestinationViewSet(viewsets.ModelViewSet):
     queryset = Destination.objects.all()
     serializer_class = DestinationSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly] # Ai cũng xem được, có token mới thêm/sửa được
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
 
 class TourViewSet(viewsets.ModelViewSet):
     queryset = Tour.objects.all()
     serializer_class = TourSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    
-    # Cấu hình tính năng Search và Filter
+
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['location', 'duration'] # Lọc chính xác
-    search_fields = ['title', 'description'] # Tìm kiếm từ khóa (Search bar)
-    ordering_fields = ['price', 'rating', 'created_at'] # Sắp xếp
+    filterset_fields = ['location', 'duration']
+    search_fields = ['title', 'description']
+    ordering_fields = ['price', 'rating', 'created_at']
+
+
 class ChatbotAPIView(APIView):
-    permission_classes = [AllowAny] # Ai cũng có thể chat, không cần đăng nhập
+    permission_classes = [AllowAny]
 
     def post(self, request):
         user_message = request.data.get('message', '')
@@ -32,24 +42,29 @@ class ChatbotAPIView(APIView):
             return Response({'error': 'Vui lòng nhập tin nhắn.'}, status=400)
 
         try:
-            # Cấu hình API Key
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            
-            # Sử dụng model Gemini 1.5 Flash (nhanh và phù hợp cho chat)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            
-            # Tạo Prompt hệ thống để định hình "nhân cách" cho AI
-            system_prompt = f"""
-            Bạn là một trợ lý ảo du lịch cực kỳ thân thiện, chuyên nghiệp của website đặt tour TravelBaMia.
-            Nhiệm vụ của bạn là tư vấn lịch trình, gợi ý điểm đến, và giải đáp thắc mắc về du lịch cho khách hàng.
-            Hãy trả lời bằng tiếng Việt, ngắn gọn, súc tích (dưới 150 chữ), dùng icon cho sinh động.
-            Tuyệt đối không bịa ra các tour không có thật, nếu không biết hãy khuyên khách hàng xem trên website.
-            
-            Khách hàng hỏi: "{user_message}"
-            """
-            
-            response = model.generate_content(system_prompt)
+            # 2. Khởi tạo Client theo chuẩn SDK mới
+            client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+            # 3. Cấu hình System Instruction (Chuẩn và chuyên nghiệp hơn)
+            sys_instruct = (
+                "Bạn là trợ lý ảo du lịch TravelBaMia thân thiện. "
+                "Tư vấn lịch trình, gợi ý điểm đến bằng tiếng Việt. "
+                "Trả lời ngắn gọn (<150 từ), dùng icon sinh động. "
+                "Không bịa thông tin tour."
+            )
+
+            # 4. Gọi Model (Dùng gemini-2.5-flash cho tốc độ cực nhanh)
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=user_message,
+                config=types.GenerateContentConfig(
+                    system_instruction=sys_instruct,
+                    temperature=0.7
+                )
+            )
+
             return Response({'reply': response.text})
-            
+
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            # Trả về lỗi chi tiết hơn để dễ debug
+            return Response({'error': f"AI Error: {str(e)}"}, status=500)

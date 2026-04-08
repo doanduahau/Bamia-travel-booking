@@ -14,6 +14,7 @@ import Contact from './pages/Contact';
 import Chatbot from './components/Chatbot';
 import ItineraryPage from './pages/ItineraryPage';
 import AdminDashboard from './pages/AdminDashboard';
+import Payments from './pages/Payments';
 function App() {
   return (
     <BrowserRouter>
@@ -31,6 +32,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/itinerary" element={<ItineraryPage />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/payments" element={<Payments />} />
             </Routes>
           </main>
           <Chatbot />

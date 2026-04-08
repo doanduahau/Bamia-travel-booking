@@ -3,6 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Booking, Cart
 from .serializers import BookingSerializer, CartSerializer
 import re
+from rest_framework.decorators import action
+from rest_framework import status
 from datetime import timedelta
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,8 +18,8 @@ class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated] # Bắt buộc đăng nhập
 
     def get_queryset(self):
-        # Chỉ trả về danh sách booking của user đang đăng nhập
-        return Booking.objects.filter(user=self.request.user)
+        # Chỉ trả về danh sách booking của user đang đăng nhập, loại trừ đã hủy
+        return Booking.objects.filter(user=self.request.user).exclude(status='Cancelled')
 
     def perform_create(self, serializer):
         # Tự động gán user hiện tại và tính toán tổng tiền
@@ -25,6 +27,15 @@ class BookingViewSet(viewsets.ModelViewSet):
         people = serializer.validated_data.get('number_of_people', 1)
         total_price = tour.price * people
         serializer.save(user=self.request.user, total_price=total_price)
+        
+    @action(detail=True, methods=['patch'], url_path='cancel')
+    def cancel(self, request, pk=None):
+        booking = self.get_object()
+        if booking.status == 'Pending':
+            booking.delete()
+            return Response({'status': 'Đã hủy đơn hàng và xoá khỏi lịch'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Không thể hủy đơn hàng này'}, status=status.HTTP_400_BAD_REQUEST)
+
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
@@ -47,24 +58,46 @@ class MyItineraryView(APIView):
         return start_date + timedelta(days=days - 1)
 
     def get(self, request):
-        bookings = Booking.objects.filter(user=request.user)
+        bookings = Booking.objects.filter(user=request.user).exclude(status='Cancelled')
         cart_items = Cart.objects.filter(user=request.user)
         
         events = []
         
-        # 1. Thêm Tour đã đặt (Màu Xanh lá)
+        # 1. Thêm Tour đã đặt - phân loại theo trạng thái
         for b in bookings:
             if b.date:
                 end_date = self.get_end_date(b.date, b.tour.duration)
+
+                if b.status == 'Pending':
+                    # Màu vàng cho tour chờ thanh toán
+                    bg_color = '#F59E0B'   # amber-400
+                    border_color = '#D97706'  # amber-600
+                    label = f"[Chờ thanh toán] {b.tour.title}"
+                elif b.status == 'Paid':
+                    # Màu xanh lá cho tour đã thanh toán
+                    bg_color = '#10B981'   # emerald-500
+                    border_color = '#059669'
+                    label = f"[Đã thanh toán] {b.tour.title}"
+                else:
+                    # Confirmed hoặc trạng thái khác - xanh lá nhạt
+                    bg_color = '#34D399'
+                    border_color = '#10B981'
+                    label = f"[Đã đặt] {b.tour.title}"
+
                 events.append({
                     'id': f'booking_{b.id}',
-                    'title': f"[Đã đặt] {b.tour.title}",
+                    'title': label,
                     'start': b.date.strftime('%Y-%m-%d'),
-                    # FullCalendar yêu cầu end_date phải cộng thêm 1 ngày để bao phủ trọn ngày cuối
-                    'end': (end_date + timedelta(days=1)).strftime('%Y-%m-%d'), 
-                    'backgroundColor': '#10B981', # emerald-500 (Xanh lá)
-                    'borderColor': '#059669',
-                    'extendedProps': { 'status': 'booked', 'tour_id': b.tour.id }
+                    'end': (end_date + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    'allDay': True,
+                    'display': 'block',
+                    'backgroundColor': bg_color,
+                    'borderColor': border_color,
+                    'extendedProps': {
+                        'status': b.status,
+                        'tour_id': b.tour.id,
+                        'location_name': b.tour.location.name if b.tour.location else ''
+                    }
                 })
         
         # 2. Thêm Tour trong giỏ hàng (Màu Cam)
@@ -76,9 +109,15 @@ class MyItineraryView(APIView):
                     'title': f"[Giỏ hàng] {c.tour.title}",
                     'start': c.date.strftime('%Y-%m-%d'),
                     'end': (end_date + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    'allDay': True,
+                    'display': 'block',
                     'backgroundColor': '#F97316', # orange-500 (Cam)
                     'borderColor': '#EA580C',
-                    'extendedProps': { 'status': 'in_cart', 'tour_id': c.tour.id }
+                    'extendedProps': { 
+                        'status': 'in_cart', 
+                        'tour_id': c.tour.id,
+                        'location_name': c.tour.location.name if c.tour.location else ''
+                    }
                 })
                 
         return Response(events)

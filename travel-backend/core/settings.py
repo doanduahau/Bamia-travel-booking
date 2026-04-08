@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+# Nạp biến môi trường từ file .env lên hệ thống
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y5+1p5nn$z7!nwg0(26k-fo=a5a9en&gz!o3m-bvjf4oz&j7q5'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-y5+1p5nn$z7!nwg0(26k-fo=a5a9en&gz!o3m-bvjf4oz&j7q5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '*').split(',') if host.strip()]
 
 
 # Application definition
@@ -46,6 +51,7 @@ INSTALLED_APPS = [
     'tours',
     'bookings',
     'reviews',
+    'payments',
     'django_filters'
 ]
 
@@ -87,8 +93,6 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -142,5 +146,5 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), # Sống 1 ngày
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
-# Cấu hình Gemini API
-GEMINI_API_KEY = "điền key"
+# Cấu hình Gemini API lấy từ biến môi trường
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")

@@ -4,6 +4,8 @@ import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { MapPin, Clock, Star, Users, Calendar } from 'lucide-react';
 
+const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://127.0.0.1:8000';
+
 const TourDetails = () => {
     const { id } = useParams(); // Lấy ID từ URL
     const navigate = useNavigate();
@@ -88,7 +90,7 @@ const TourDetails = () => {
     let imageUrl = 'https://via.placeholder.com/800x400?text=No+Image';
     if (tour.image) {
         if (tour.image.startsWith('http')) imageUrl = tour.image;
-        else imageUrl = `http://127.0.0.1:8000${tour.image.startsWith('/') ? tour.image : `/${tour.image}`}`;
+        else imageUrl = `${BACKEND_BASE_URL}${tour.image.startsWith('/') ? tour.image : `/${tour.image}`}`;
     }
 
     return (
