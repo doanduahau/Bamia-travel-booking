@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
 import { useNavigate, Link } from 'react-router-dom';
+import PageBanner from '../components/PageBanner';
 
 const Register = () => {
     const [formData, setFormData] = useState({ username: '', email: '', password: '' });
@@ -23,8 +24,14 @@ const Register = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto mt-16 bg-white p-8 border rounded shadow-sm">
-            <h2 className="text-2xl font-bold mb-6 text-center">Đăng ký tài khoản</h2>
+        <div className="bg-gray-50 min-h-screen pb-20">
+            <PageBanner 
+                title="Tham Gia Cùng Chúng Tôi"
+                subtitle="Bắt đầu hành trình khám phá thế giới của riêng bạn ngay hôm nay."
+                image="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000"
+            />
+            
+            <div className="max-w-md mx-auto -mt-10 md:-mt-12 relative z-10 bg-white p-8 border border-gray-100 rounded-2xl shadow-xl">
             {error && <p className="text-red-500 mb-4">{error}</p>}
             <form onSubmit={handleSubmit}>
                 <div className="mb-4">
@@ -49,6 +56,7 @@ const Register = () => {
             <p className="mt-4 text-center text-gray-600">
                 Đã có tài khoản? <Link to="/login" className="text-blue-600 hover:underline">Đăng nhập</Link>
             </p>
+        </div>
         </div>
     );
 };

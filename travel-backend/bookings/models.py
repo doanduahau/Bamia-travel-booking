@@ -16,10 +16,13 @@ class Booking(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    show_on_calendar = models.BooleanField(default=True, verbose_name='Hiển thị trên lịch')
 
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cart')
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE)
-    date = models.DateField(null=True, blank=True) # Ngày dự kiến đi
-    number_of_people = models.IntegerField(default=1) # Số lượng người
+    date = models.DateField(null=True, blank=True)
+    number_of_people = models.IntegerField(default=1)
     added_at = models.DateTimeField(auto_now_add=True)
+    show_on_calendar = models.BooleanField(default=True, verbose_name='Hiển thị trên lịch')

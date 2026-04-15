@@ -5,8 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.conf import settings
 
-from google import genai
-from google.genai import types
+import requests
 
 from .models import Tour, Destination, Category
 from .serializers import TourSerializer, DestinationSerializer, CategorySerializer
@@ -38,33 +37,50 @@ class ChatbotAPIView(APIView):
 
     def post(self, request):
         user_message = request.data.get('message', '')
+        system_instruction = request.data.get('system_instruction', '')
+        history = request.data.get('history', [])
+
         if not user_message:
             return Response({'error': 'Vui lòng nhập tin nhắn.'}, status=400)
 
+        # 1. Kiểm tra an ninh cơ bản tại Backend (Server-side security)
+        security_keywords = ['database', 'password', 'mật khẩu', 'cấu trúc sql', 'select *', 'delete from', 'drop table', 'hệ thống', 'backend code']
+        if any(kw in user_message.lower() for kw in security_keywords):
+            return Response({'reply': 'Xin lỗi, tôi không thể hỗ trợ các thông tin liên quan đến kỹ thuật hoặc bảo mật hệ thống. 🙏'})
+
         try:
-            # 2. Khởi tạo Client theo chuẩn SDK mới
-            client = genai.Client(api_key=settings.GEMINI_API_KEY)
+            # 2. Chuẩn bị messages cho Ollama
+            ollama_messages = []
+            if system_instruction:
+                ollama_messages.append({"role": "system", "content": system_instruction})
+            
+            # Thêm lịch sử hội thoại
+            for msg in history:
+                ollama_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+            
+            # Thêm tin nhắn hiện tại
+            ollama_messages.append({"role": "user", "content": user_message})
 
-            # 3. Cấu hình System Instruction (Chuẩn và chuyên nghiệp hơn)
-            sys_instruct = (
-                "Bạn là trợ lý ảo du lịch TravelBaMia thân thiện. "
-                "Tư vấn lịch trình, gợi ý điểm đến bằng tiếng Việt. "
-                "Trả lời ngắn gọn (<150 từ), dùng icon sinh động. "
-                "Không bịa thông tin tour."
-            )
+            # 3. Gọi Ollama API
+            ollama_url = "http://localhost:11434/api/chat"
+            payload = {
+                "model": "qwen2.5",
+                "messages": ollama_messages,
+                "stream": False,
+                "options": {
+                    "temperature": 0.7
+                }
+            }
 
-            # 4. Gọi Model (Dùng gemini-2.5-flash cho tốc độ cực nhanh)
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=user_message,
-                config=types.GenerateContentConfig(
-                    system_instruction=sys_instruct,
-                    temperature=0.7
-                )
-            )
+            response = requests.post(ollama_url, json=payload, timeout=60)
+            response.raise_for_status()
+            
+            data = response.json()
+            reply_text = data.get('message', {}).get('content', '')
 
-            return Response({'reply': response.text})
+            return Response({'reply': reply_text})
 
+        except requests.exceptions.RequestException as e:
+            return Response({'error': f"Lỗi kết nối đến Ollama local: {str(e)}"}, status=500)
         except Exception as e:
-            # Trả về lỗi chi tiết hơn để dễ debug
             return Response({'error': f"AI Error: {str(e)}"}, status=500)

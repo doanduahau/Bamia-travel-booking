@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { CreditCard, QrCode, Building, Lock, CheckCircle, XCircle } from 'lucide-react';
+import PageBanner from "../components/PageBanner";
 
 const Payments = () => {
     const location = useLocation();
@@ -116,10 +117,16 @@ const Payments = () => {
           }));
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-12 relative">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Thanh Toán An Toàn</h1>
+        <div className="bg-gray-50 min-h-screen pb-20">
+            <PageBanner 
+                title="Thanh Toán An Toàn"
+                subtitle="Cổng thanh toán bảo mật, hỗ trợ đa dạng phương thức thanh toán trong và ngoài nước."
+                image="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000"
+            />
+            
+            <div className="max-w-4xl mx-auto px-4 py-12 relative z-10">
 
-            <div className="flex flex-col md:flex-row gap-8">
+            <div className="-mt-10 md:-mt-12 flex flex-col md:flex-row gap-8">
                 {/* Chọn phương thức thanh toán */}
                 <div className="md:w-2/3 space-y-6">
                     <h2 className="text-xl font-bold text-gray-800">Chọn phương thức thanh toán</h2>
@@ -326,6 +333,7 @@ const Payments = () => {
                     </div>
                 </div>
             )}
+        </div>
         </div>
     );
 };

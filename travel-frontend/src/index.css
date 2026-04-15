@@ -1,9 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-bg: #005555;
+  --primary-dark: #004444;
+  --primary-light: #007777;
+  --accent: #f97316;
+}
+
 body {
-  background-color: #f8fafc; /* Màu nền xám nhạt */
+  font-family: 'Outfit', sans-serif;
+  background-color: #ffffff;
+  color: #1a1a1a;
 }
 
 /* Đồng đều kích thước các ô calendar */

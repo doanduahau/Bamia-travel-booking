@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import TourCard from '../components/TourCard';
 import { Search } from 'lucide-react';
+import PageBanner from '../components/PageBanner';
 
 const Tours = () => {
 
@@ -50,11 +51,17 @@ const Tours = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Khám Phá Các Tour Du Lịch</h1>
+        <div className="bg-gray-50 min-h-screen pb-20">
+            <PageBanner 
+                title="Khám Phá Các Tour Du Lịch"
+                subtitle="Hàng ngàn hành trình hấp dẫn đang chờ đón bạn khám phá."
+                image="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000"
+            />
+            
+            <div className="max-w-7xl mx-auto px-4 py-8 relative z-10 transition-all">
 
             {/* Thanh Tìm Kiếm & Lọc */}
-            <div className="bg-white p-4 rounded-lg shadow-md mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="mt-2 bg-white p-4 rounded-lg shadow-md mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
                 <form onSubmit={handleSearch} className="flex w-full md:w-1/2">
                     <input
                         type="text"
@@ -95,6 +102,7 @@ const Tours = () => {
             ) : (
                 <div className="text-center py-20 text-gray-500 text-xl">Không tìm thấy tour nào phù hợp.</div>
             )}
+        </div>
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Facebook, Twitter, Instagram, Send } from 'lucide-react';
+import PageBanner from '../components/PageBanner';
 
 const Contact = () => {
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -28,26 +29,15 @@ const Contact = () => {
     return (
         <div className="w-full bg-gray-50 min-h-screen pb-20">
             {/* 1. HERO SECTION */}
-            <div className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden">
-                <div
-                    className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000')" }}
-                >
-                    <div className="absolute inset-0 bg-gray-900 bg-opacity-60"></div>
-                </div>
-                <div className="relative z-10 text-center px-4">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-lg">
-                        Liên Hệ Với Chúng Tôi
-                    </h1>
-                    <p className="text-lg text-gray-200 max-w-2xl mx-auto drop-shadow-md">
-                        Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn mọi lúc, mọi nơi. Đừng ngần ngại để lại lời nhắn!
-                    </p>
-                </div>
-            </div>
+            <PageBanner 
+                title="Liên Hệ Với Chúng Tôi"
+                subtitle="Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn mọi lúc, mọi nơi. Đừng ngần ngại để lại lời nhắn!"
+                image="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000"
+            />
 
             {/* MAIN CONTENT */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-20">
+                <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     {/* 2. CONTACT INFORMATION (Cột trái) */}
                     <div className="space-y-8">

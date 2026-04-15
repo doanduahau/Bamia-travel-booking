@@ -23,36 +23,40 @@ const TourCard = ({ tour }) => {
     // --- KẾT THÚC ĐOẠN XỬ LÝ ẢNH ---
 
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <img src={imageUrl} alt={tour.title} className="w-full h-48 object-cover" />
-            <div className="p-5">
-                <div className="flex justify-between items-center mb-2">
-                    <span className="flex items-center text-sm text-gray-500">
-                        <MapPin className="w-4 h-4 mr-1 text-blue-500" />
-                        {tour.location_detail?.name || 'Chưa cập nhật'}
-                    </span>
-                    <span className="flex items-center text-sm font-semibold text-yellow-500">
-                        <Star className="w-4 h-4 mr-1 fill-current" />
-                        {tour.rating}
-                    </span>
+        <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-500 group border border-gray-100">
+            <div className="relative overflow-hidden h-52">
+                <img src={imageUrl} alt={tour.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center shadow-sm">
+                    <Star className="w-3.5 h-3.5 mr-1 text-orange-500 fill-orange-500" />
+                    <span className="text-xs font-bold text-gray-800">{tour.rating}</span>
+                </div>
+            </div>
+            
+            <div className="p-6">
+                <div className="flex items-center text-xs font-bold text-orange-600 uppercase tracking-wider mb-2">
+                    <MapPin className="w-3.5 h-3.5 mr-1" />
+                    {tour.location_detail?.name || 'Chưa cập nhật'}
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-800 mb-2 truncate" title={tour.title}>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#005555] transition-colors line-clamp-1" title={tour.title}>
                     {tour.title}
                 </h3>
 
-                <div className="flex items-center text-sm text-gray-600 mb-4">
-                    <Clock className="w-4 h-4 mr-1" />
+                <div className="flex items-center text-sm text-gray-500 mb-6 font-medium">
+                    <Clock className="w-4 h-4 mr-2 text-teal-600" />
                     {tour.duration}
                 </div>
 
-                <div className="flex justify-between items-center border-t pt-4">
-                    <div className="text-xl font-bold text-blue-600">
-                        {Number(tour.price).toLocaleString('vi-VN')} VNĐ
+                <div className="flex justify-between items-center border-t border-gray-100 pt-5">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Giá từ</span>
+                        <div className="text-xl font-extrabold text-[#005555]">
+                            {Number(tour.price).toLocaleString('vi-VN')} <span className="text-xs">VNĐ</span>
+                        </div>
                     </div>
                     <Link
                         to={`/tours/${tour.id}`}
-                        className="px-4 py-2 bg-blue-100 text-blue-600 rounded-md hover:bg-[#005555] hover:text-white transition-colors"
+                        className="px-5 py-2.5 bg-[#005555] text-white text-sm font-bold rounded-full hover:bg-orange-500 shadow-md hover:shadow-orange-500/20 transition-all transform hover:scale-105"
                     >
                         Xem chi tiết
                     </Link>

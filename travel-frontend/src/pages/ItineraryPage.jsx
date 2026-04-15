@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import api from '../api/axios'; 
 import axios from 'axios';       
 import { AuthContext } from '../context/AuthContext';
+import PageBanner from '../components/PageBanner';
+
+const BANNER_IMAGE = 'https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000';
 
 const ItineraryPage = () => {
     const calendarRef = useRef(null);
@@ -191,103 +194,149 @@ const ItineraryPage = () => {
         if (tourId) navigate(`/tours/${tourId}`);
     };
 
-    if (loading) return <div className="text-center py-20 text-xl text-gray-500">Đang tải lịch trình và thời tiết...</div>;
-
-    return (
-        <div className="max-w-7xl mx-auto px-4 py-12">
-            <div className="text-center mb-10">
-                <h1 className="text-4xl font-extrabold text-gray-800 mb-4 tracking-tight">Lịch Trình Chuyến Đi</h1>
-                <p className="text-lg text-gray-600">Theo dõi các tour bạn đã đặt cùng dự báo thời tiết tại đúng địa điểm tour đó.</p>
-                {weatherError && (
-                    <p className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg inline-block px-3 py-1.5">
-                        {weatherError}
-                    </p>
-                )}
-
-                <div className="flex justify-center gap-4 mt-6 flex-wrap">
-                    <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
-                        <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-sm"></span>
-                        <span className="text-sm font-bold text-emerald-800">Đã thanh toán</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1.5 rounded-full border border-yellow-100">
-                        <span className="w-3.5 h-3.5 rounded-full bg-amber-400 shadow-sm"></span>
-                        <span className="text-sm font-bold text-amber-800">Chờ thanh toán</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100">
-                        <span className="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-sm"></span>
-                        <span className="text-sm font-bold text-orange-800">Dự định đi (Trong giỏ)</span>
+    if (loading) {
+        return (
+            <div className="bg-slate-50 min-h-screen pb-20">
+                <PageBanner
+                    title="Lịch Trình Chuyến Đi"
+                    subtitle="Theo dõi các tour bạn đã đặt cùng dự báo thời tiết tại đúng địa điểm tour đó."
+                    image={BANNER_IMAGE}
+                />
+                <div className="max-w-7xl mx-auto px-4 py-12 relative z-10">
+                    <div className="mt-2 bg-white rounded-2xl shadow-lg border border-slate-100 p-8 animate-pulse">
+                        <div className="h-8 w-72 bg-slate-200 rounded mx-auto mb-4"></div>
+                        <div className="h-4 w-96 max-w-full bg-slate-200 rounded mx-auto mb-8"></div>
+                        <div className="h-[560px] bg-slate-100 rounded-xl border border-slate-200"></div>
                     </div>
                 </div>
             </div>
+        );
+    }
 
-            <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-                <div className="calendar-container">
-                    <FullCalendar
-                        ref={calendarRef}
-                        plugins={[dayGridPlugin, interactionPlugin]}
-                        initialView="dayGridMonth35"
-                        views={{
-                            dayGridMonth35: {
-                                type: 'dayGrid',
-                                dateIncrement: { months: 1 },
-                                buttonText: 'Tháng',
-                                titleFormat: { year: 'numeric', month: 'long' },
-                                visibleRange: (currentDate) => {
-                                    const firstOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-                                    const mondayBasedDay = (firstOfMonth.getDay() + 6) % 7; // Mon=0 ... Sun=6
-                                    const start = new Date(firstOfMonth);
-                                    start.setDate(firstOfMonth.getDate() - mondayBasedDay);
+    return (
+        <div className="bg-slate-50 min-h-screen pb-20">
+            <PageBanner 
+                title="Lịch Trình Chuyến Đi"
+                subtitle="Theo dõi các tour bạn đã đặt cùng dự báo thời tiết tại đúng địa điểm tour đó."
+                image={BANNER_IMAGE}
+            />
+            
+            <div className="max-w-7xl mx-auto px-4 py-12 relative z-10">
+                <div className="mt-2 mb-8 bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
+                    <div className="text-center mb-5">
+                        <h2 className="text-2xl md:text-3xl font-bold text-slate-800">Theo dõi lịch trình thông minh</h2>
+                        <p className="text-slate-500 mt-2">Màu trạng thái đơn hàng và widget thời tiết được cập nhật theo từng ngày.</p>
+                    </div>
 
-                                    const end = new Date(start);
-                                    end.setDate(start.getDate() + 35);
+                    {weatherError && (
+                        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg inline-block px-3 py-1.5 mb-5">
+                            {weatherError}
+                        </p>
+                    )}
 
-                                    return { start, end };
-                                },
-                            },
-                        }}
-                        firstDay={1}
-                        events={events}
-                        eventClick={handleEventClick}
-                        dayCellContent={renderDayCell}
-                        height={780}
-                        expandRows={true}
-                        fixedWeekCount={false}
-                        dayMaxEvents={3}
-                        customButtons={{
-                            prevYearBtn: {
-                                text: '«',
-                                click: () => calendarRef.current?.getApi().incrementDate({ years: -1 }),
-                            },
-                            prevBtn: {
-                                text: '‹',
-                                click: () => calendarRef.current?.getApi().incrementDate({ months: -1 }),
-                            },
-                            nextBtn: {
-                                text: '›',
-                                click: () => calendarRef.current?.getApi().incrementDate({ months: 1 }),
-                            },
-                            nextYearBtn: {
-                                text: '»',
-                                click: () => calendarRef.current?.getApi().incrementDate({ years: 1 }),
-                            },
-                        }}
-                        headerToolbar={{
-                            left: 'prevYearBtn,prevBtn',
-                            center: 'title',
-                            right: 'nextBtn,nextYearBtn'
-                        }}
-                        eventContent={(arg) => (
-                            <div
-                                className="overflow-hidden w-full h-full flex items-center gap-1 px-1.5 py-[2px]"
-                                title={arg.event.title}
+                    <div className="flex justify-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100">
+                            <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-sm"></span>
+                            <span className="text-sm font-bold text-emerald-800">Đã thanh toán</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-full border border-amber-100">
+                            <span className="w-3.5 h-3.5 rounded-full bg-amber-400 shadow-sm"></span>
+                            <span className="text-sm font-bold text-amber-800">Chờ thanh toán</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-full border border-orange-100">
+                            <span className="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-sm"></span>
+                            <span className="text-sm font-bold text-orange-800">Dự định đi (Trong giỏ)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+                        <h3 className="text-xl font-bold text-slate-800">Lịch theo tuần hiển thị 35 ngày</h3>
+                        <p className="text-sm text-slate-500">Nhấn vào sự kiện để mở chi tiết tour</p>
+                    </div>
+
+                    {events.length === 0 ? (
+                        <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <p className="text-lg font-semibold text-slate-700 mb-2">Bạn chưa có lịch trình nào để hiển thị</p>
+                            <p className="text-slate-500 mb-6">Hãy đặt tour hoặc thêm tour vào giỏ để theo dõi trên lịch.</p>
+                            <Link
+                                to="/tours"
+                                className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors"
                             >
-                                <span className="text-white text-[11px] font-semibold truncate leading-tight">
-                                    {arg.event.title}
-                                </span>
-                            </div>
-                        )}
-                        eventClassNames="cursor-pointer rounded-sm"
-                    />
+                                Khám phá tour ngay
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="calendar-container">
+                            <FullCalendar
+                                ref={calendarRef}
+                                plugins={[dayGridPlugin, interactionPlugin]}
+                                initialView="dayGridMonth35"
+                                views={{
+                                    dayGridMonth35: {
+                                        type: 'dayGrid',
+                                        dateIncrement: { months: 1 },
+                                        buttonText: 'Tháng',
+                                        titleFormat: { year: 'numeric', month: 'long' },
+                                        visibleRange: (currentDate) => {
+                                            const firstOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                                            const mondayBasedDay = (firstOfMonth.getDay() + 6) % 7; // Mon=0 ... Sun=6
+                                            const start = new Date(firstOfMonth);
+                                            start.setDate(firstOfMonth.getDate() - mondayBasedDay);
+
+                                            const end = new Date(start);
+                                            end.setDate(start.getDate() + 35);
+
+                                            return { start, end };
+                                        },
+                                    },
+                                }}
+                                firstDay={1}
+                                events={events}
+                                eventClick={handleEventClick}
+                                dayCellContent={renderDayCell}
+                                height={780}
+                                expandRows={true}
+                                fixedWeekCount={false}
+                                dayMaxEvents={3}
+                                customButtons={{
+                                    prevYearBtn: {
+                                        text: '«',
+                                        click: () => calendarRef.current?.getApi().incrementDate({ years: -1 }),
+                                    },
+                                    prevBtn: {
+                                        text: '‹',
+                                        click: () => calendarRef.current?.getApi().incrementDate({ months: -1 }),
+                                    },
+                                    nextBtn: {
+                                        text: '›',
+                                        click: () => calendarRef.current?.getApi().incrementDate({ months: 1 }),
+                                    },
+                                    nextYearBtn: {
+                                        text: '»',
+                                        click: () => calendarRef.current?.getApi().incrementDate({ years: 1 }),
+                                    },
+                                }}
+                                headerToolbar={{
+                                    left: 'prevYearBtn,prevBtn',
+                                    center: 'title',
+                                    right: 'nextBtn,nextYearBtn'
+                                }}
+                                eventContent={(arg) => (
+                                    <div
+                                        className="overflow-hidden w-full h-full flex items-center gap-1 px-1.5 py-[2px]"
+                                        title={arg.event.title}
+                                    >
+                                        <span className="text-white text-[11px] font-semibold truncate leading-tight">
+                                            {arg.event.title}
+                                        </span>
+                                    </div>
+                                )}
+                                eventClassNames="cursor-pointer rounded-sm"
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

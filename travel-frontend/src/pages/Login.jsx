@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import PageBanner from '../components/PageBanner';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -24,8 +25,14 @@ const Login = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto mt-16 bg-white p-8 border rounded shadow-sm">
-            <h2 className="text-2xl font-bold mb-6 text-center">Đăng nhập</h2>
+        <div className="bg-gray-50 min-h-screen pb-20">
+            <PageBanner 
+                title="Chào Mừng Trở Lại"
+                subtitle="Đăng nhập để tiếp tục quản lý các chuyến đi tuyệt vời của bạn."
+                image="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000"
+            />
+            
+            <div className="max-w-md mx-auto -mt-10 md:-mt-12 relative z-10 bg-white p-8 border border-gray-100 rounded-2xl shadow-xl">
             {error && <p className="text-red-500 mb-4">{error}</p>}
             <form onSubmit={handleSubmit}>
                 <div className="mb-4">
@@ -45,6 +52,7 @@ const Login = () => {
             <p className="mt-4 text-center text-gray-600">
                 Chưa có tài khoản? <Link to="/register" className="text-blue-600 hover:underline">Đăng ký ngay</Link>
             </p>
+        </div>
         </div>
     );
 };
