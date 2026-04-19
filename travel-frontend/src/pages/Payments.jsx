@@ -191,7 +191,7 @@ const Payments = () => {
                         </div>
                         <div className="flex justify-between items-center text-xl font-bold border-t pt-4 mb-6">
                             <span>Tổng thanh toán</span>
-                            <span className="text-orange-600">{totalAmount.toLocaleString('vi-VN')} đ</span>
+                            <span className="text-[#007777]">{totalAmount.toLocaleString('vi-VN')} đ</span>
                         </div>
 
                         <button 

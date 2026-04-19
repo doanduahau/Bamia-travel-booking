@@ -1,0 +1,132 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block header_title %}Quản lý Người dùng{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- Filters & Search -->
+    <div class="p-6 border-b border-gray-100">
+        <form method="GET" class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="relative flex-grow max-w-md">
+                <i data-lucide="search" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="{{ request.GET.search|default:'' }}" 
+                    placeholder="Tìm theo username hoặc email..."
+                    class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#005555] focus:bg-white transition-all">
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <select name="role" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-[#005555]">
+                    <option value="">Tất cả vai trò</option>
+                    <option value="admin" {% if request.GET.role == 'admin' %}selected{% endif %}>Quản trị viên</option>
+                    <option value="customer" {% if request.GET.role == 'customer' %}selected{% endif %}>Khách hàng</option>
+                </select>
+                <button type="submit" class="bg-[#005555] text-white px-6 py-2 rounded-xl font-medium hover:bg-[#004444] transition-colors">
+                    Lọc
+                </button>
+                {% if request.GET.search or request.GET.role %}
+                <a href="{% url 'admin_users' %}" class="text-gray-500 hover:text-red-500">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                <tr>
+                    <th class="px-6 py-4 font-semibold">Người dùng</th>
+                    <th class="px-6 py-4 font-semibold">Email</th>
+                    <th class="px-6 py-4 font-semibold">Vai trò</th>
+                    <th class="px-6 py-4 font-semibold">Trạng thái</th>
+                    <th class="px-6 py-4 font-semibold">Ngày tham gia</th>
+                    <th class="px-6 py-4 font-semibold text-right">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for user in users_list %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500 uppercase mr-3">
+                                {{ user.username|make_list|first }}
+                            </div>
+                            <div class="font-medium text-gray-900">{{ user.username }}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600">{{ user.email }}</td>
+                    <td class="px-6 py-4">
+                        {% if user.is_staff %}
+                        <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-bold uppercase">Staff</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold uppercase">Customer</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if user.is_active %}
+                        <span class="flex items-center text-green-600 text-sm">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> Hoạt động
+                        </span>
+                        {% else %}
+                        <span class="flex items-center text-red-600 text-sm">
+                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span> Đã khóa
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 text-sm">
+                        {{ user.date_joined|date:"d/m/Y" }}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <!-- Toggle Status Button -->
+                            <form action="{% url 'admin_toggle_user_status' user.id %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                    title="{% if user.is_active %}Khóa tài khoản{% else %}Mở khóa{% endif %}"
+                                    class="p-2 {% if user.is_active %}text-orange-500 hover:bg-orange-50{% else %}text-green-500 hover:bg-green-50{% endif %} rounded-lg transition-colors">
+                                    <i data-lucide="{% if user.is_active %}user-x{% else %}user-check{% endif %}" class="w-4 h-4"></i>
+                                </button>
+                            </form>
+                            
+                            <!-- Edit User Button -->
+                            <a href="{% url 'admin_user_edit' user.id %}" 
+                                title="Chỉnh sửa thông tin"
+                                class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-20 text-center text-gray-500 italic">
+                        Không tìm thấy người dùng nào phù hợp.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-sm">
+        <span class="text-gray-500">Trang {{ page_obj.number }} / {{ paginator.num_pages }}</span>
+        <div class="flex gap-2">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" 
+                class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-white transition-colors">Trước</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" 
+                class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-white transition-colors">Sau</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

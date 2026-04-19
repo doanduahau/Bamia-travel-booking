@@ -294,7 +294,7 @@ const MyBookings = () => {
         <button
           className={tabButtonClass(
             "bookings",
-            "bg-blue-600 text-white shadow-sm",
+            "bg-[#007777] text-white shadow-sm",
             "text-slate-600 hover:bg-slate-100",
           )}
           onClick={() => handleTabChange("bookings")}
@@ -304,7 +304,7 @@ const MyBookings = () => {
         <button
           className={tabButtonClass(
             "cart",
-            "bg-blue-600 text-white shadow-sm",
+            "bg-[#007777] text-white shadow-sm",
             "text-slate-600 hover:bg-slate-100",
           )}
           onClick={() => handleTabChange("cart")}
@@ -365,7 +365,7 @@ const MyBookings = () => {
                   </div>
 
                   <div className="text-right flex flex-col items-end gap-2">
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-[#007777]">
                       {Number(booking.total_price).toLocaleString("vi-VN")} đ
                     </p>
                     <span
@@ -388,12 +388,12 @@ const MyBookings = () => {
                     <label
                       className={`flex items-center gap-2 cursor-pointer select-none text-sm font-medium px-3 py-1.5 rounded-lg border transition-all duration-200 ${
                         booking.show_on_calendar
-                          ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                          ? "bg-[#007777]/5 text-[#007777] border-[#007777]/20 hover:bg-[#007777]/10"
                           : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
                       }`}
                     >
                       {booking.show_on_calendar ? (
-                        <CalendarCheck className="w-4 h-4 text-blue-600" />
+                        <CalendarCheck className="w-4 h-4 text-[#007777]" />
                       ) : (
                         <CalendarOff className="w-4 h-4 text-gray-400" />
                       )}
@@ -404,7 +404,7 @@ const MyBookings = () => {
                       </span>
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
+                        className="w-4 h-4 rounded border-gray-300 text-[#007777] focus:ring-[#007777] cursor-pointer accent-[#007777]"
                         checked={booking.show_on_calendar}
                         disabled={togglingCalendar[booking.id]}
                         onChange={() =>
@@ -422,7 +422,7 @@ const MyBookings = () => {
                         <>
                           <button
                             onClick={() => handleRetryPayment(booking)}
-                            className="bg-orange-500 text-white text-sm font-bold py-1.5 px-4 rounded-lg hover:bg-orange-600 transition"
+                            className="bg-[#007777] text-white text-sm font-bold py-1.5 px-4 rounded-lg hover:bg-[#005555] transition"
                           >
                             Thanh toán ngay →
                           </button>
@@ -460,7 +460,7 @@ const MyBookings = () => {
               </p>
               <Link
                 to="/tours"
-                className="inline-block bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition"
+                className="inline-block bg-[#007777] text-white px-6 py-2 rounded-lg hover:bg-[#005555] transition"
               >
                 Tìm tour ngay
               </Link>
@@ -475,7 +475,7 @@ const MyBookings = () => {
                   >
                     <input
                       type="checkbox"
-                      className="w-5 h-5 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-2 sm:mt-0"
+                      className="w-5 h-5 cursor-pointer rounded border-gray-300 text-[#007777] focus:ring-[#007777] mt-2 sm:mt-0"
                       checked={selectedCartItems.includes(item.id)}
                       onChange={() => handleSelectCartItem(item.id)}
                     />
@@ -489,7 +489,7 @@ const MyBookings = () => {
                         <h3 className="text-lg font-bold text-gray-800 line-clamp-2">
                           {item.tour_detail.title}
                         </h3>
-                        <p className="text-blue-600 font-semibold mt-1">
+                        <p className="text-[#007777] font-semibold mt-1">
                           {Number(item.tour_detail.price).toLocaleString(
                             "vi-VN",
                           )}{" "}
@@ -539,7 +539,7 @@ const MyBookings = () => {
                     </div>
                     <div className="sm:absolute right-4 bottom-4 text-right">
                       <p className="text-sm text-gray-500">Thành tiền</p>
-                      <p className="text-xl font-bold text-orange-500">
+                      <p className="text-xl font-bold text-[#007777]">
                         {Number(
                           item.tour_detail.price * item.number_of_people,
                         ).toLocaleString("vi-VN")}{" "}
@@ -556,7 +556,7 @@ const MyBookings = () => {
                     <label className="text-sm font-normal text-gray-600 flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                        className="w-4 h-4 rounded border-gray-300 cursor-pointer text-[#007777] focus:ring-[#007777]"
                         checked={isAllSelected}
                         onChange={handleSelectAll}
                       />
@@ -571,12 +571,12 @@ const MyBookings = () => {
                   </div>
                   <div className="flex justify-between items-center mb-6 text-lg">
                     <span className="font-bold text-gray-800">Tổng cộng:</span>
-                    <span className="font-bold text-orange-600 text-2xl">
+                    <span className="font-bold text-[#007777] text-2xl">
                       {cartTotal.toLocaleString("vi-VN")} đ
                     </span>
                   </div>
                   <button
-                    className={`w-full font-bold py-3 rounded-lg transition-colors ${selectedCartItems.length === 0 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-orange-500 text-white hover:bg-orange-600"}`}
+                    className={`w-full font-bold py-3 rounded-lg transition-colors ${selectedCartItems.length === 0 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-[#007777] text-white hover:bg-[#005555]"}`}
                     disabled={selectedCartItems.length === 0}
                     onClick={handleCheckout}
                   >

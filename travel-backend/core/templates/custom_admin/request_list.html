@@ -1,0 +1,107 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block header_title %}Yêu cầu hỗ trợ{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- Filters -->
+    <div class="p-6 border-b border-gray-100">
+        <form method="GET" class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <select name="status" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-[#005555]">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="PROCESSING" {% if request.GET.status == 'PROCESSING' %}selected{% endif %}>Đang xử lý</option>
+                    <option value="COMPLETED" {% if request.GET.status == 'COMPLETED' %}selected{% endif %}>Đã hoàn thành</option>
+                </select>
+                <select name="type" class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-[#005555]">
+                    <option value="">Tất cả loại yêu cầu</option>
+                    <option value="FORGOT_PASSWORD" {% if request.GET.type == 'FORGOT_PASSWORD' %}selected{% endif %}>Quên mật khẩu</option>
+                    <option value="REFUND" {% if request.GET.type == 'REFUND' %}selected{% endif %}>Hoàn tiền</option>
+                    <option value="EDIT_INFO" {% if request.GET.type == 'EDIT_INFO' %}selected{% endif %}>Chỉnh sửa thông tin</option>
+                    <option value="OTHER" {% if request.GET.type == 'OTHER' %}selected{% endif %}>Khác</option>
+                </select>
+                <button type="submit" class="bg-[#005555] text-white px-6 py-2 rounded-xl font-medium hover:bg-[#004444] transition-colors">
+                    Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                <tr>
+                    <th class="px-6 py-4 font-semibold">Người yêu cầu</th>
+                    <th class="px-6 py-4 font-semibold">Loại yêu cầu</th>
+                    <th class="px-6 py-4 font-semibold">Nội dung</th>
+                    <th class="px-6 py-4 font-semibold">Thời gian</th>
+                    <th class="px-6 py-4 font-semibold">Trạng thái</th>
+                    <th class="px-6 py-4 font-semibold text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for req in requests %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-900">
+                        {% if req.user %}
+                            {{ req.user.username }}
+                        {% else %}
+                            <div class="flex flex-col">
+                                <span>{{ req.guest_name }}</span>
+                                <span class="text-xs text-gray-500 font-normal italic">{{ req.guest_email }}</span>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold">
+                            {{ req.get_request_type_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600 max-w-xs truncate">{{ req.content|default:"Không có nội dung" }}</td>
+                    <td class="px-6 py-4 text-gray-500 text-sm">{{ req.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="px-6 py-4">
+                        {% if req.status == 'PROCESSING' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span> Đang xử lý
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span> Đã hoàn thành
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        {% if req.status == 'PROCESSING' %}
+                        <div class="flex justify-end gap-3 items-center">
+                            <!-- Link directly to User Edit page only if user exists -->
+                            {% if req.user %}
+                            <a href="{% url 'admin_user_edit' req.user.id %}" class="text-blue-600 font-bold text-xs hover:underline flex items-center">
+                                <i data-lucide="edit-3" class="w-3 h-3 mr-1"></i> Xử lý & Sửa thông tin
+                            </a>
+                            {% endif %}
+
+                            <form action="{% url 'admin_complete_support_request' req.id %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-[#005555] font-bold text-xs hover:underline flex items-center border border-[#005555]/20 px-2 py-1 rounded-lg hover:bg-[#005555]/5">
+                                    <i data-lucide="check" class="w-3 h-3 mr-1"></i> Xong
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span class="text-gray-400 text-xs italic">Đã xử lý xong</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-20 text-center text-gray-500 italic">
+                        Chưa có yêu cầu hỗ trợ nào.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

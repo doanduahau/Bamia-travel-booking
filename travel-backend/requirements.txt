@@ -3,6 +3,5 @@ djangorestframework
 django-cors-headers
 djangorestframework-simplejwt
 django-filter
-google-genai
 Pillow
 python-dotenv

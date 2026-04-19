@@ -1,8 +1,58 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import TourCard from "../components/TourCard";
 import { Search, Globe, Shield, ThumbsUp, Heart } from "lucide-react";
+
+// Component con xử lý hiệu ứng chạy số
+const AnimatedCounter = ({ target, suffix = "", duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const countRef = useRef(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Chỉ chạy 1 lần khi cuộn tới
+        if (entry.isIntersecting && !hasAnimated.current) {
+          setIsVisible(true);
+          hasAnimated.current = true;
+        }
+      },
+      { threshold: 0.1 } // Kích hoạt khi 10% element hiện ra
+    );
+
+    if (countRef.current) observer.observe(countRef.current);
+    
+    return () => {
+      if (countRef.current) observer.unobserve(countRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let start = 0;
+    // Cập nhật số mỗi 16ms (tương đương 60fps)
+    const increment = target / (duration / 16); 
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        clearInterval(timer);
+        setCount(target);
+      } else {
+        setCount(Math.ceil(start));
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [isVisible, target, duration]);
+
+  // Format số theo định dạng có dấu phẩy (vd: 50,000)
+  return <span ref={countRef}>{count.toLocaleString('vi-VN')}{suffix}</span>;
+};
+
 const popularDestinations = [
   {
     id: 1,
@@ -145,8 +195,8 @@ const Home = () => {
       </div>
 
       {/* 2. POPULAR DESTINATIONS */}
-      <div className="max-w-7xl mx-auto px-6 py-32">
-        <div className="text-center mb-20 animate-fade-in">
+      <div className="max-w-7xl mx-auto px-6 pt-24 pb-8">
+        <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-extrabold text-[#005555] mb-6">
             Điểm Đến <span className="text-orange-500">Phổ Biến</span>
           </h2>
@@ -177,10 +227,42 @@ const Home = () => {
         </div>
       </div>
 
-      {/* 3. FEATURED TOURS */}
-      <div className="bg-gray-50 py-32">
+      {/* MỤC SỐ LIỆU CHẠY (STATS) MỚI THÊM */}
+      <div className="pb-24 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-200">
+            <div className="p-4">
+              <div className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+                  <AnimatedCounter target={154} />+
+              </div>
+              <p className="text-gray-500 font-medium tracking-wider uppercase text-xs md:text-sm">Điểm Đến</p>
+            </div>
+            <div className="p-4">
+              <div className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+                  <AnimatedCounter target={50000} suffix="+" />
+              </div>
+              <p className="text-gray-500 font-medium tracking-wider uppercase text-xs md:text-sm">Khách Hàng</p>
+            </div>
+            <div className="p-4">
+              <div className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+                  <AnimatedCounter target={98} suffix="%" />
+              </div>
+              <p className="text-gray-500 font-medium tracking-wider uppercase text-xs md:text-sm">Hài Lòng</p>
+            </div>
+            <div className="p-4 border-l border-gray-200">
+              <div className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+                  <AnimatedCounter target={12} />
+              </div>
+              <p className="text-gray-500 font-medium tracking-wider uppercase text-xs md:text-sm">Năm Kinh Nghiệm</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. FEATURED TOURS */}
+      <div className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
             <div className="text-center md:text-left">
               <h2 className="text-4xl md:text-5xl font-extrabold text-[#005555] mb-4">
                 Tour <span className="text-orange-500">Nổi Bật</span>

@@ -1,0 +1,82 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block header_title %}Danh sách Tour{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 gap-4 bg-gray-50/50">
+        <h3 class="font-bold text-lg text-gray-800">Tất cả Tour</h3>
+        
+        <!-- Filter Bar -->
+        <form method="GET" class="flex flex-wrap items-center gap-3 flex-1 md:justify-end w-full">
+            <div class="relative min-w-[200px] flex-1 md:max-w-xs">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Tìm kiếm tên tour..." 
+                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#005555] outline-none transition-all bg-white">
+            </div>
+
+            <select name="category" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#005555] bg-white cursor-pointer">
+                <option value="">-- Tất cả danh mục --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="location" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#005555] bg-white cursor-pointer">
+                <option value="">-- Tất cả địa điểm --</option>
+                {% for loc in locations %}
+                <option value="{{ loc.id }}" {% if request.GET.location == loc.id|stringformat:"s" %}selected{% endif %}>{{ loc.name }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="flex gap-2">
+                <button type="submit" class="bg-[#005555] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#004444] transition-all flex items-center shadow-sm">
+                    Lọc
+                </button>
+                {% if request.GET.q or request.GET.category or request.GET.location %}
+                <a href="{% url 'admin_tours' %}" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all flex items-center">
+                    Bỏ lọc
+                </a>
+                {% endif %}
+            </div>
+            
+            <a href="{% url 'admin_tour_create' %}" class="bg-orange-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 flex items-center ml-auto md:ml-4">
+                <i data-lucide="plus" class="w-4 h-4 mr-1"></i>Thêm Tour
+            </a>
+        </form>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
+                <tr>
+                    <th class="px-6 py-4">Tên Tour</th>
+                    <th class="px-6 py-4">Địa điểm</th>
+                    <th class="px-6 py-4">Thời gian</th>
+                    <th class="px-6 py-4">Giá (đ)</th>
+                    <th class="px-6 py-4 text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for tour in tours %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-900 border-l-4 border-transparent hover:border-[#005555] max-w-[200px] truncate" title="{{ tour.title }}">{{ tour.title }}</td>
+                    <td class="px-6 py-4">{{ tour.location.name|default:"--" }}</td>
+                    <td class="px-6 py-4">{{ tour.duration }}</td>
+                    <td class="px-6 py-4 text-orange-600 font-semibold">{{ tour.price|floatformat:0 }}</td>
+                    <td class="px-6 py-4 flex gap-2 justify-center">
+                        <a href="{% url 'admin_tour_edit' tour.id %}" class="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded-lg transition-colors" title="Sửa"><i data-lucide="edit-3" class="w-4 h-4"></i></a>
+                        <!-- Form xóa -->
+                        <form method="POST" action="{% url 'admin_tour_delete' tour.id %}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tour này?');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-500 hover:text-red-700 p-1" title="Xóa"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Chưa có dữ liệu.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

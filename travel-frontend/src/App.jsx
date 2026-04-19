@@ -10,6 +10,7 @@ import TourDetails from './pages/TourDetails'; // <-- Thêm dòng import này
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MyBookings from './pages/MyBookings';
+import Profile from './pages/Profile';
 import Contact from './pages/Contact';
 import Chatbot from './components/Chatbot';
 import ItineraryPage from './pages/ItineraryPage';
@@ -29,7 +30,9 @@ const AppContent = () => {
           <Route path="/tours/:id" element={<TourDetails />} /> {/* <-- Thêm Route này */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
           <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/itinerary" element={<ItineraryPage />} />
           <Route path="/payments" element={<Payments />} />

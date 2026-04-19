@@ -1,0 +1,87 @@
+{% extends 'custom_admin/base_admin.html' %} {% block header_title %}Trang chủ
+quản trị{% endblock %} {% block content %}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  <div
+    class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center"
+  >
+    <div class="p-4 bg-blue-50 text-blue-600 rounded-xl mr-4">
+      <i data-lucide="map" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-500 mb-1">Tổng số Tour</p>
+      <h3 class="text-2xl font-bold text-gray-800">{{ total_tours }}</h3>
+    </div>
+  </div>
+
+  <div
+    class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center"
+  >
+    <div class="p-4 bg-green-50 text-green-600 rounded-xl mr-4">
+      <i data-lucide="calendar-check" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-500 mb-1">Hành khách đã đặt</p>
+      <h3 class="text-2xl font-bold text-gray-800">{{ total_bookings }}</h3>
+    </div>
+  </div>
+
+  <div
+    class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center"
+  >
+    <div class="p-4 bg-purple-50 text-purple-600 rounded-xl mr-4">
+      <i data-lucide="users" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-500 mb-1">Người dùng</p>
+      <h3 class="text-2xl font-bold text-gray-800">{{ total_users }}</h3>
+    </div>
+  </div>
+
+  <div
+    class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center"
+  >
+    <div class="p-4 bg-orange-50 text-orange-600 rounded-xl mr-4">
+      <i data-lucide="dollar-sign" class="w-6 h-6"></i>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-500 mb-1">Thu nhập (Confirmed)</p>
+      <h3 class="text-xl font-bold text-gray-800">
+        {{ revenue|floatformat:0 }} đ
+      </h3>
+    </div>
+  </div>
+</div>
+
+<!-- Simple Welcome Panel -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+  <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+    <div>
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+        Chào mừng trở lại,
+        <span class="text-[#007777]">{{ request.user.username }}</span>!
+      </h2>
+      <p class="text-gray-500 text-lg leading-relaxed">
+        Bạn đang đăng nhập vào hệ thống quản trị của TravelBaMia. Hãy theo dõi
+        các chỉ số quan trọng hôm nay.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-4">
+        <a
+          href="{% url 'admin_tours' %}"
+          class="px-5 py-2.5 bg-[#007777] text-white font-semibold rounded-xl hover:bg-[#005555] transition-all"
+        >
+          Quản lý Tour
+        </a>
+        <a
+          href="{% url 'admin_bookings' %}"
+          class="px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all border border-gray-200"
+        >
+          Bookings mới
+        </a>
+      </div>
+    </div>
+    <div class="hidden md:block p-4 bg-emerald-50 rounded-2xl">
+      <i data-lucide="layout-dashboard" class="w-12 h-12 text-[#007777]"></i>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block header_title %}Kiểm duyệt Đánh giá{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 gap-4 bg-gray-50/50">
+        <h3 class="font-bold text-lg text-gray-800">Tất cả Đánh giá</h3>
+        
+        <!-- Filter Bar -->
+        <form method="GET" class="flex flex-wrap items-center gap-3 flex-1 md:justify-end w-full">
+            <div class="relative min-w-[200px] flex-1 md:max-w-xs">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Tìm tên khách, tên tour..." 
+                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#005555] outline-none transition-all bg-white">
+            </div>
+
+            <select name="rating" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#005555] bg-white cursor-pointer">
+                <option value="">-- Tất cả số sao --</option>
+                <option value="5" {% if request.GET.rating == "5" %}selected{% endif %}>5 sao (Tuyệt vời)</option>
+                <option value="4" {% if request.GET.rating == "4" %}selected{% endif %}>4 sao (Tốt)</option>
+                <option value="3" {% if request.GET.rating == "3" %}selected{% endif %}>3 sao (Bình thường)</option>
+                <option value="2" {% if request.GET.rating == "2" %}selected{% endif %}>2 sao (Kém)</option>
+                <option value="1" {% if request.GET.rating == "1" %}selected{% endif %}>1 sao (Tệ)</option>
+            </select>
+
+            <div class="flex gap-2">
+                <button type="submit" class="bg-[#005555] text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-[#004444] transition-all flex items-center shadow-sm">
+                    Lọc
+                </button>
+                {% if request.GET.q or request.GET.rating %}
+                <a href="{% url 'admin_reviews' %}" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all flex items-center">
+                    Bỏ lọc
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
+                <tr>
+                    <th class="px-6 py-4">Người dùng</th>
+                    <th class="px-6 py-4">Tour</th>
+                    <th class="px-6 py-4">Rating</th>
+                    <th class="px-6 py-4 w-1/4">Nội dung</th>
+                    <th class="px-6 py-4 text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for review in reviews %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-900 border-l-4 border-transparent hover:border-red-400">
+                        {{ review.username|default:review.user.username }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs text-gray-500 block truncate max-w-[200px]" title="{{ review.tour.title }}">{{ review.tour.title }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center text-yellow-400">
+                            <span class="font-bold mr-1">{{ review.rating }}</span> <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-gray-600 italic line-clamp-2 text-xs" title="{{ review.comment }}">"{{ review.comment|default:'(Không có nội dung)' }}"</p>
+                    </td>
+                    <td class="px-6 py-4 flex justify-center">
+                        <form method="POST" action="{% url 'admin_review_delete' review.id %}" onsubmit="return confirm('Xóa đánh giá này khỏi hệ thống vĩnh viễn?');">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center text-xs font-bold border border-red-100">
+                                <i data-lucide="x-circle" class="w-4 h-4 mr-1"></i> Xóa
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Chưa có đánh giá nào trên hệ thống.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

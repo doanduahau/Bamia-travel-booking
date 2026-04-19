@@ -1,0 +1,90 @@
+{% extends 'custom_admin/base_admin.html' %}
+
+{% block header_title %}Đơn Đặt Chỗ (Bookings){% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 gap-4 bg-gray-50/50">
+        <h3 class="font-bold text-lg text-gray-800">Tất cả đơn đặt</h3>
+        
+        <!-- Filter Bar -->
+        <form method="GET" class="flex flex-wrap items-center gap-3 flex-1 md:justify-end w-full">
+            <div class="relative min-w-[200px] flex-1 md:max-w-xs">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Tìm mã đơn, tên khách..." 
+                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#005555] outline-none transition-all bg-white">
+            </div>
+
+            <select name="status" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#005555] bg-white cursor-pointer">
+                <option value="">-- Tất cả trạng thái --</option>
+                {% for status_val, status_name in status_choices %}
+                <option value="{{ status_val }}" {% if request.GET.status == status_val %}selected{% endif %}>{{ status_name }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="flex gap-2">
+                <button type="submit" class="bg-[#005555] text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-[#004444] transition-all flex items-center shadow-sm">
+                    Lọc đơn
+                </button>
+                {% if request.GET.q or request.GET.status %}
+                <a href="{% url 'admin_bookings' %}" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all flex items-center">
+                    Bỏ lọc
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
+                <tr>
+                    <th class="px-6 py-4">Mã Đơn / Khách hàng</th>
+                    <th class="px-6 py-4">Tour đi</th>
+                    <th class="px-6 py-4">Tổng tiền (đ)</th>
+                    <th class="px-6 py-4">Trạng thái</th>
+                    <th class="px-6 py-4 text-center">Thao tác Nhanh</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for booking in bookings %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-gray-900 border-l-4 border-[#005555] pl-2">#{{ booking.id }}</div>
+                        <div class="text-xs text-gray-500 mt-1 pl-3">{{ booking.user.username }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-800 truncate max-w-[200px]">{{ booking.tour.title }}</div>
+                        <div class="text-xs text-gray-400">{{ booking.date|date:"d/m/Y" }} | {{ booking.number_of_people }} vé</div>
+                    </td>
+                    <td class="px-6 py-4 font-bold text-orange-600">{{ booking.total_price|floatformat:0 }}</td>
+                    <td class="px-6 py-4">
+                        {% if booking.status == 'Pending' %}
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Chờ XN</span>
+                        {% elif booking.status == 'Confirmed' %}
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Đã XN</span>
+                        {% elif booking.status == 'Paid' %}
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Đã T.Toán</span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Bị hủy</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 flex justify-center gap-2">
+                        <form method="POST" action="{% url 'admin_change_booking_status' booking.id %}" class="flex gap-2">
+                            {% csrf_token %}
+                            <select name="status" class="border border-gray-200 rounded-lg text-xs px-2 py-1 outline-none text-gray-700 font-medium cursor-pointer" onchange="this.form.submit()">
+                                <option value="Pending" {% if booking.status == 'Pending' %}selected{% endif %}>Đổi: Chờ XN</option>
+                                <option value="Confirmed" {% if booking.status == 'Confirmed' %}selected{% endif %}>Đổi: Đã XN</option>
+                                <option value="Paid" {% if booking.status == 'Paid' %}selected{% endif %}>Đổi: Đã T.Toán</option>
+                                <option value="Cancelled" {% if booking.status == 'Cancelled' %}selected{% endif %}>Đổi: Hủy</option>
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Chưa có dữ liệu đặt phòng.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -77,7 +77,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'core', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -146,5 +146,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), # Sống 1 ngày
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
-# Cấu hình Gemini API lấy từ biến môi trường
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Email Configuration
+# Sử dụng console backend trong development để xem email ở terminal
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'TravelBaMia <support@travelbamia.com>'

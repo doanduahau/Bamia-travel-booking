@@ -1,29 +1,41 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Facebook, Twitter, Instagram, Send } from 'lucide-react';
 import PageBanner from '../components/PageBanner';
+import axios from '../api/axios';
 
 const Contact = () => {
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitStatus, setSubmitStatus] = useState(null); // 'success' hoặc 'error'
+    const [submitStatus, setSubmitStatus] = useState(null);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setSubmitStatus(null);
 
-        // Giả lập gọi API gửi tin nhắn (Sau này bạn có thể nối với backend Django)
-        setTimeout(() => {
+        try {
+            await axios.post('/auth/support/', {
+                guest_name: formData.name,
+                guest_email: formData.email,
+                content: formData.message,
+                request_type: 'CONTACT'
+            });
+
             setIsSubmitting(false);
             setSubmitStatus('success');
-            setFormData({ name: '', email: '', message: '' }); // Reset form
+            setFormData({ name: '', email: '', message: '' });
 
-            // Tắt thông báo sau 5 giây
+            setTimeout(() => setSubmitStatus(null), 8000);
+        } catch (error) {
+            console.error("Error sending message:", error);
+            setIsSubmitting(false);
+            setSubmitStatus('error');
             setTimeout(() => setSubmitStatus(null), 5000);
-        }, 1500);
+        }
     };
 
     return (
@@ -47,7 +59,7 @@ const Contact = () => {
                             <div className="space-y-6">
                                 {/* Address Card */}
                                 <div className="flex items-start group">
-                                    <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 flex-shrink-0 shadow-sm">
+                                    <div className="w-14 h-14 bg-[#007777]/10 rounded-2xl flex items-center justify-center text-[#007777] group-hover:bg-[#007777] group-hover:text-white transition-colors duration-300 flex-shrink-0 shadow-sm">
                                         <MapPin className="w-6 h-6" />
                                     </div>
                                     <div className="ml-6">
@@ -58,7 +70,7 @@ const Contact = () => {
 
                                 {/* Phone Card */}
                                 <div className="flex items-start group">
-                                    <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300 flex-shrink-0 shadow-sm">
+                                    <div className="w-14 h-14 bg-[#007777]/10 rounded-2xl flex items-center justify-center text-[#007777] group-hover:bg-[#007777] group-hover:text-white transition-colors duration-300 flex-shrink-0 shadow-sm">
                                         <Phone className="w-6 h-6" />
                                     </div>
                                     <div className="ml-6">
@@ -69,7 +81,7 @@ const Contact = () => {
 
                                 {/* Email Card */}
                                 <div className="flex items-start group">
-                                    <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300 flex-shrink-0 shadow-sm">
+                                    <div className="w-14 h-14 bg-[#007777]/10 rounded-2xl flex items-center justify-center text-[#007777] group-hover:bg-[#007777] group-hover:text-white transition-colors duration-300 flex-shrink-0 shadow-sm">
                                         <Mail className="w-6 h-6" />
                                     </div>
                                     <div className="ml-6">
@@ -119,7 +131,7 @@ const Contact = () => {
                                     value={formData.name}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none bg-gray-50 focus:bg-white"
+                                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-[#007777] focus:ring-2 focus:ring-[#007777]/20 transition-all outline-none bg-gray-50 focus:bg-white"
                                     placeholder="Ví dụ: Nguyễn Văn A"
                                 />
                             </div>
@@ -132,7 +144,7 @@ const Contact = () => {
                                     value={formData.email}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none bg-gray-50 focus:bg-white"
+                                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-[#007777] focus:ring-2 focus:ring-[#007777]/20 transition-all outline-none bg-gray-50 focus:bg-white"
                                     placeholder="Ví dụ: email@domain.com"
                                 />
                             </div>
@@ -145,7 +157,7 @@ const Contact = () => {
                                     onChange={handleChange}
                                     required
                                     rows="5"
-                                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none bg-gray-50 focus:bg-white resize-none"
+                                    className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-[#007777] focus:ring-2 focus:ring-[#007777]/20 transition-all outline-none bg-gray-50 focus:bg-white resize-none"
                                     placeholder="Bạn muốn hỏi về vấn đề gì..."
                                 ></textarea>
                             </div>
@@ -153,7 +165,7 @@ const Contact = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className={`w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center transition-all shadow-md hover:shadow-lg ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:-translate-y-1'}`}
+                                className={`w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center transition-all shadow-md hover:shadow-lg ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#007777] hover:bg-[#005555] hover:-translate-y-1'}`}
                             >
                                 {isSubmitting ? 'Đang gửi...' : (
                                     <>
