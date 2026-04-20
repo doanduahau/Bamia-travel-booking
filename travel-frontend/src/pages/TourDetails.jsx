@@ -141,7 +141,7 @@ const TourDetails = () => {
             />
 
             <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
-                <div className="-mt-10 md:-mt-12 flex flex-col lg:flex-row gap-8">
+                <div className="flex flex-col lg:flex-row gap-8">
                     {/* Cột trái: Thông tin Tour */}
                     <div className="lg:w-2/3">
                         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8">
