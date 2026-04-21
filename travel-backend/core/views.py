@@ -16,7 +16,7 @@ from django.utils.crypto import get_random_string
 from tours.models import Tour, Category, Destination
 from bookings.models import Booking
 from reviews.models import Review
-from core.forms import TourForm
+from core.forms import TourForm, CategoryForm, DestinationForm
 from users.models import SupportRequest
 
 class CustomAdminLoginView(LoginView):
@@ -312,3 +312,89 @@ class AdminTourUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         context['title'] = f"Chỉnh sửa: {self.object.title}"
         return context
+
+# --- Category Management ---
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminCategoryListView(ListView):
+    model = Category
+    template_name = 'custom_admin/category_list.html'
+    context_object_name = 'categories'
+
+    def get_queryset(self):
+        queryset = Category.objects.all().order_by('name')
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+        return queryset
+
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminCategoryCreateView(CreateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'custom_admin/category_form.html'
+    success_url = reverse_lazy('admin_categories')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Thêm mới Danh mục"
+        return context
+
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminCategoryUpdateView(UpdateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'custom_admin/category_form.html'
+    success_url = reverse_lazy('admin_categories')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f"Chỉnh sửa Danh mục: {self.object.name}"
+        return context
+
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminCategoryDeleteView(DeleteView):
+    model = Category
+    success_url = reverse_lazy('admin_categories')
+
+# --- Destination Management ---
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminDestinationListView(ListView):
+    model = Destination
+    template_name = 'custom_admin/destination_list.html'
+    context_object_name = 'destinations'
+
+    def get_queryset(self):
+        queryset = Destination.objects.all().order_by('name')
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
+        return queryset
+
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminDestinationCreateView(CreateView):
+    model = Destination
+    form_class = DestinationForm
+    template_name = 'custom_admin/destination_form.html'
+    success_url = reverse_lazy('admin_destinations')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Thêm mới Địa điểm"
+        return context
+
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminDestinationUpdateView(UpdateView):
+    model = Destination
+    form_class = DestinationForm
+    template_name = 'custom_admin/destination_form.html'
+    success_url = reverse_lazy('admin_destinations')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f"Chỉnh sửa Địa điểm: {self.object.name}"
+        return context
+
+@method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
+class AdminDestinationDeleteView(DeleteView):
+    model = Destination
+    success_url = reverse_lazy('admin_destinations')

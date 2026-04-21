@@ -294,7 +294,7 @@ const Home = () => {
 
           <button
             onClick={() => navigate("/tours")}
-            className="w-full mt-8 py-3 bg-white border border-blue-600 text-blue-600 rounded-xl font-bold md:hidden hover:bg-blue-50 transition"
+            className="w-full mt-8 py-3 bg-white border border-[#005555] text-[#005555] rounded-xl font-bold md:hidden hover:bg-[#005555]/5 transition"
           >
             Xem tất cả tour
           </button>

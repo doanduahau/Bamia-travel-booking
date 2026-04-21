@@ -74,7 +74,7 @@ const Login = () => {
           <div className="mb-10">
             <Link
               to="/"
-              className="inline-block lg:hidden mb-8 text-[#007777] font-bold text-2xl tracking-tighter"
+              className="inline-block lg:hidden mb-8 text-[#005555] font-bold text-2xl tracking-tighter"
             >
               TravelBaMia.
             </Link>
@@ -149,7 +149,7 @@ const Login = () => {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007777]/50 focus:border-[#007777] transition-all focus:bg-white hover:border-gray-300"
+                      className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#005555]/50 focus:border-[#005555] transition-all focus:bg-white hover:border-gray-300"
                       placeholder="Nhập tên tài khoản"
                       required
                     />
@@ -179,7 +179,7 @@ const Login = () => {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007777]/50 focus:border-[#007777] transition-all focus:bg-white hover:border-gray-300"
+                      className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#005555]/50 focus:border-[#005555] transition-all focus:bg-white hover:border-gray-300"
                       placeholder="••••••••"
                       required
                     />
@@ -189,14 +189,14 @@ const Login = () => {
                   <label className="flex items-center text-gray-600 cursor-pointer">
                     <input
                       type="checkbox"
-                      className="mr-2.5 h-4 w-4 rounded border-gray-300 text-[#007777] focus:ring-[#007777] transition-all cursor-pointer"
+                      className="mr-2.5 h-4 w-4 rounded border-gray-300 text-[#005555] focus:ring-[#005555] transition-all cursor-pointer"
                     />
                     <span className="select-none">Ghi nhớ đăng nhập</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setIsForgotPassword(true)}
-                    className="font-semibold text-[#007070] hover:text-[#005555] hover:underline transition-all"
+                    className="font-semibold text-[#005555] hover:text-[#004444] hover:underline transition-all"
                   >
                     Quên mật khẩu?
                   </button>
@@ -227,7 +227,7 @@ const Login = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all focus:bg-white hover:border-gray-300"
+                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#005555]/50 focus:border-[#005555] transition-all focus:bg-white hover:border-gray-300"
                     placeholder="your-email@example.com"
                     required
                   />
@@ -238,7 +238,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full bg-[#007777] hover:bg-[#005555] text-white font-semibold py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007777] transition-all shadow-lg shadow-[#007777]/30 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2 ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
+              className={`w-full bg-[#005555] hover:bg-[#004444] text-white font-semibold py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#005555] transition-all shadow-lg shadow-[#005555]/30 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2 ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
             >
               <span>{isForgotPassword ? "Gửi yêu cầu" : "Đăng nhập"}</span>
               <svg
@@ -312,7 +312,7 @@ const Login = () => {
               {isForgotPassword ? (
                 <button
                   onClick={() => setIsForgotPassword(false)}
-                  className="font-semibold text-[#007777] hover:text-[#005555] hover:underline transition-all flex items-center"
+                  className="font-semibold text-[#005555] hover:text-[#004444] hover:underline transition-all flex items-center"
                 >
                   <svg
                     className="w-4 h-4 mr-1"
@@ -334,7 +334,7 @@ const Login = () => {
                   Chưa có tài khoản?{" "}
                   <Link
                     to="/register"
-                    className="font-semibold text-[#007777] hover:text-[#005555] hover:underline transition-all"
+                    className="font-semibold text-[#005555] hover:text-[#004444] hover:underline transition-all"
                   >
                     Đăng ký ngay
                   </Link>

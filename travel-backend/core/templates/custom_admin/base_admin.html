@@ -21,6 +21,12 @@
             <a href="{% url 'admin_tours' %}" class="flex items-center px-4 py-3 {% if 'tour' in request.resolver_match.url_name %}bg-white/10 font-medium{% else %}text-white/70 hover:bg-white/5 hover:text-white{% endif %} rounded-xl transition-colors">
                 <i data-lucide="map" class="w-5 h-5 mr-3"></i> Quản lý Tour
             </a>
+            <a href="{% url 'admin_categories' %}" class="flex items-center px-4 py-3 {% if 'category' in request.resolver_match.url_name %}bg-white/10 font-medium{% else %}text-white/70 hover:bg-white/5 hover:text-white{% endif %} rounded-xl transition-colors">
+                <i data-lucide="layers" class="w-5 h-5 mr-3"></i> Danh mục
+            </a>
+            <a href="{% url 'admin_destinations' %}" class="flex items-center px-4 py-3 {% if 'destination' in request.resolver_match.url_name %}bg-white/10 font-medium{% else %}text-white/70 hover:bg-white/5 hover:text-white{% endif %} rounded-xl transition-colors">
+                <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Địa điểm
+            </a>
             <a href="{% url 'admin_bookings' %}" class="flex items-center px-4 py-3 {% if 'booking' in request.resolver_match.url_name %}bg-white/10 font-medium{% else %}text-white/70 hover:bg-white/5 hover:text-white{% endif %} rounded-xl transition-colors">
                 <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
             </a>

@@ -22,6 +22,8 @@ from django.views.generic import RedirectView
 from core.views import (
     CustomAdminLoginView, CustomAdminDashboardView, AdminTourListView, AdminTourDeleteView,
     AdminTourCreateView, AdminTourUpdateView,
+    AdminCategoryListView, AdminCategoryCreateView, AdminCategoryUpdateView, AdminCategoryDeleteView,
+    AdminDestinationListView, AdminDestinationCreateView, AdminDestinationUpdateView, AdminDestinationDeleteView,
     AdminBookingListView, admin_change_booking_status, AdminReviewListView, AdminReviewDeleteView,
     AdminForgotPasswordView, AdminUserListView, AdminUserUpdateView, AdminSupportRequestListView, admin_complete_support_request, admin_reset_user_password, admin_toggle_user_status
 )
@@ -39,6 +41,16 @@ urlpatterns = [
     path('admin/tours/add/', AdminTourCreateView.as_view(), name='admin_tour_create'),
     path('admin/tours/<int:pk>/edit/', AdminTourUpdateView.as_view(), name='admin_tour_edit'),
     path('admin/tours/<int:pk>/delete/', AdminTourDeleteView.as_view(), name='admin_tour_delete'),
+    
+    path('admin/categories/', AdminCategoryListView.as_view(), name='admin_categories'),
+    path('admin/categories/add/', AdminCategoryCreateView.as_view(), name='admin_category_create'),
+    path('admin/categories/<int:pk>/edit/', AdminCategoryUpdateView.as_view(), name='admin_category_edit'),
+    path('admin/categories/<int:pk>/delete/', AdminCategoryDeleteView.as_view(), name='admin_category_delete'),
+
+    path('admin/destinations/', AdminDestinationListView.as_view(), name='admin_destinations'),
+    path('admin/destinations/add/', AdminDestinationCreateView.as_view(), name='admin_destination_create'),
+    path('admin/destinations/<int:pk>/edit/', AdminDestinationUpdateView.as_view(), name='admin_destination_edit'),
+    path('admin/destinations/<int:pk>/delete/', AdminDestinationDeleteView.as_view(), name='admin_destination_delete'),
     
     path('admin/bookings/', AdminBookingListView.as_view(), name='admin_bookings'),
     path('admin/bookings/<int:pk>/status/', admin_change_booking_status, name='admin_change_booking_status'),

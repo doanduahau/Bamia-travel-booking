@@ -47,7 +47,7 @@ const Register = () => {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 xl:p-24 h-full overflow-y-auto">
                 <div className="w-full max-w-md">
                     <div className="text-center lg:text-left mb-10">
-                        <Link to="/" className="inline-block lg:hidden mb-8 text-[#007777] font-bold text-2xl tracking-tighter">
+                        <Link to="/" className="inline-block lg:hidden mb-8 text-[#005555] font-bold text-2xl tracking-tighter">
                             TravelBaMia.
                         </Link>
                         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">Tạo tài khoản mới</h1>
@@ -63,7 +63,7 @@ const Register = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-[#005555] transition-colors">
                                 Tên tài khoản <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
@@ -76,14 +76,14 @@ const Register = () => {
                                     type="text" 
                                     name="username" 
                                     onChange={handleChange}
-                                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007777]/50 focus:border-[#007777] transition-all focus:bg-white hover:border-gray-300"
+                                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#005555]/50 focus:border-[#005555] transition-all focus:bg-white hover:border-gray-300"
                                     placeholder="Nhập tên tài khoản"
                                     required 
                                 />
                             </div>
                         </div>
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-[#005555] transition-colors">
                                 Email liên hệ <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
@@ -96,14 +96,14 @@ const Register = () => {
                                     type="email" 
                                     name="email" 
                                     onChange={handleChange}
-                                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007777]/50 focus:border-[#007777] transition-all focus:bg-white hover:border-gray-300"
+                                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#005555]/50 focus:border-[#005555] transition-all focus:bg-white hover:border-gray-300"
                                     placeholder="your@email.com"
                                     required 
                                 />
                             </div>
                         </div>
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-[#005555] transition-colors">
                                 Mật khẩu <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
@@ -116,7 +116,7 @@ const Register = () => {
                                     type="password" 
                                     name="password" 
                                     onChange={handleChange}
-                                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007777]/50 focus:border-[#007777] transition-all focus:bg-white hover:border-gray-300"
+                                    className="w-full border border-gray-200 bg-gray-50 text-gray-900 pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#005555]/50 focus:border-[#005555] transition-all focus:bg-white hover:border-gray-300"
                                     placeholder="••••••••"
                                     required 
                                 />
@@ -126,7 +126,7 @@ const Register = () => {
                         <div className="pt-2">
                                 <button 
                                     type="submit" 
-                                    className="w-full bg-[#007777] hover:bg-[#005555] text-white font-semibold py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007777] transition-all shadow-lg shadow-[#007777]/30 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2"
+                                    className="w-full bg-[#005555] hover:bg-[#004444] text-white font-semibold py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#005555] transition-all shadow-lg shadow-[#005555]/30 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2"
                                 >
                                 <span>Tạo tài khoản ngay</span>
                                 <svg className="w-5 h-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,7 +143,7 @@ const Register = () => {
                     <div className="mt-8 pt-8 border-t border-gray-200">
                         <p className="text-center text-gray-600">
                             Đã có tài khoản?{' '}
-                            <Link to="/login" className="font-semibold text-[#007777] hover:text-[#005555] hover:underline transition-all">
+                            <Link to="/login" className="font-semibold text-[#005555] hover:text-[#004444] hover:underline transition-all">
                                 Đăng nhập ngay
                             </Link>
                         </p>

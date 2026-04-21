@@ -1,5 +1,5 @@
 from django import forms
-from tours.models import Tour
+from tours.models import Tour, Category, Destination
 
 class TourForm(forms.ModelForm):
     class Meta:
@@ -32,7 +32,7 @@ class TourForm(forms.ModelForm):
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#005555] focus:border-transparent outline-none transition-all'
             }),
             'image': forms.FileInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+                'class': 'absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10'
             }),
         }
         labels = {
@@ -44,4 +44,42 @@ class TourForm(forms.ModelForm):
             'duration': 'Thời gian hành trình',
             'image': 'Ảnh đại diện',
             'available_slots': 'Số chỗ trống'
+        }
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#005555] focus:border-transparent outline-none transition-all',
+                'placeholder': 'Nhập tên danh mục...'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#005555] focus:border-transparent outline-none transition-all h-32',
+                'placeholder': 'Mô tả ngắn về danh mục này...'
+            }),
+        }
+        labels = {
+            'name': 'Tên danh mục',
+            'description': 'Mô tả'
+        }
+
+class DestinationForm(forms.ModelForm):
+    class Meta:
+        model = Destination
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#005555] focus:border-transparent outline-none transition-all',
+                'placeholder': 'Nhập tên địa điểm...'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#005555] focus:border-transparent outline-none transition-all h-32',
+                'placeholder': 'Mô tả chi tiết về địa điểm này...'
+            }),
+        }
+        labels = {
+            'name': 'Tên địa điểm',
+            'description': 'Mô tả chi tiết'
         }

@@ -40,15 +40,20 @@
                 {% if form.title.errors %}<p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Cột 1 -->
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.location.label }}</label>
-                        {{ form.location }}
-                        <p class="text-xs text-gray-400 mt-1 italic">* Chọn điểm đến chính của tour</p>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <!-- Row 1: Địa điểm & Danh mục -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.location.label }}</label>
+                    {{ form.location }}
+                    <p class="text-xs text-gray-400 mt-1 italic">* Chọn điểm đến chính của tour</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.category.label }}</label>
+                    {{ form.category }}
+                </div>
 
+                <!-- Row 2: (Giá & Số chỗ) & Ảnh đại diện (Row Span) -->
+                <div class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.price.label }}</label>
@@ -59,41 +64,50 @@
                             {{ form.available_slots }}
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.duration.label }}</label>
                         {{ form.duration }}
                     </div>
                 </div>
 
-                <!-- Cột 2 -->
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.category.label }}</label>
-                        {{ form.category }}
-                    </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.image.label }}</label>
+                    <div class="mt-1 flex flex-col justify-center items-center h-40 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#005555] transition-colors cursor-pointer bg-gray-50 overflow-hidden relative group">
+                        <!-- Background Preview -->
+                        <div id="image-preview" class="hidden absolute inset-0 bg-white items-center justify-center z-0">
+                            <img id="preview-img" src="" class="h-full w-full object-cover">
+                            <div class="absolute inset-0 bg-black/5 opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center pb-2 pointer-events-none z-20">
+                                <p class="text-[#005555] font-bold text-xs bg-white/90 px-2 py-1 rounded shadow-sm">Click để thay đổi ảnh</p>
+                            </div>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">{{ form.image.label }}</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-[#005555] transition-colors cursor-pointer bg-gray-50 overflow-hidden relative group">
-                            <div class="space-y-1 text-center">
-                                <i data-lucide="image" class="mx-auto h-12 w-12 text-gray-400 group-hover:text-[#005555]"></i>
+                        <!-- Icons and Text Container -->
+                        <div class="relative z-10 flex flex-col items-center justify-center space-y-1 text-center">
+                            <div id="icon-container">
+                                <i id="image-icon" data-lucide="image" class="mx-auto h-12 w-12 text-gray-400 group-hover:text-[#005555]"></i>
+                                <i id="check-icon" data-lucide="check-circle" class="hidden mx-auto h-12 w-12 text-green-500 bg-white/80 rounded-full"></i>
+                            </div>
+                            <div id="upload-text-container">
                                 <div class="flex text-sm text-gray-600">
                                     <span class="relative font-medium text-[#005555]">Tải ảnh lên</span>
                                 </div>
                                 <p class="text-xs text-gray-500">PNG, JPG tối đa 10MB</p>
                             </div>
-                            <div class="absolute inset-0 opacity-0 cursor-pointer">
-                                {{ form.image }}
-                            </div>
                         </div>
-                        {% if form.instance.image %}
-                        <div class="mt-3">
-                            <p class="text-xs text-gray-500 mb-2 italic">Ảnh hiện tại:</p>
-                            <img src="{{ form.instance.image.url }}" class="h-24 w-auto rounded-lg shadow-sm border border-gray-200">
-                        </div>
-                        {% endif %}
+
+                        <!-- Delete Button (Top Right) -->
+                        <button id="delete-btn" type="button" onclick="clearImage()" class="hidden absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors z-30 shadow-sm" title="Xóa ảnh">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+
+                        {{ form.image }}
                     </div>
+                    {% if form.instance.image %}
+                    <div id="current-image-container" class="mt-3">
+                        <p class="text-xs text-gray-500 mb-2 italic">Ảnh hiện tại:</p>
+                        <img src="{{ form.instance.image.url }}" class="h-24 w-auto rounded-lg shadow-sm border border-gray-200">
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -113,4 +127,62 @@
         </div>
     </form>
 </div>
+
+<script>
+    const imageInput = document.querySelector('input[name="image"]');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const currentImgContainer = document.getElementById('current-image-container');
+    
+    // New elements
+    const iconContainer = document.getElementById('icon-container');
+    const imageIcon = document.getElementById('image-icon');
+    const checkIcon = document.getElementById('check-icon');
+    const uploadTextContainer = document.getElementById('upload-text-container');
+    const deleteBtn = document.getElementById('delete-btn');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewImg.src = event.target.result;
+                    imagePreview.classList.remove('hidden');
+                    
+                    // Toggle visibility of icons and text
+                    iconContainer.classList.add('hidden');
+                    uploadTextContainer.classList.add('hidden');
+                    deleteBtn.classList.remove('hidden');
+
+                    if (currentImgContainer) {
+                        currentImgContainer.classList.add('opacity-50');
+                    }
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    function clearImage() {
+        if (imageInput) {
+            imageInput.value = ''; 
+            imagePreview.classList.add('hidden');
+            
+            // Revert icons and text
+            iconContainer.classList.remove('hidden');
+            imageIcon.classList.remove('hidden');
+            checkIcon.classList.add('hidden');
+            uploadTextContainer.classList.remove('hidden');
+            deleteBtn.classList.add('hidden');
+
+            if (currentImgContainer) {
+                currentImgContainer.classList.remove('opacity-50');
+            }
+        }
+    }
+</script>
 {% endblock %}

@@ -148,8 +148,8 @@ const TourDetails = () => {
                             <h2 className="text-3xl font-bold text-gray-800 mb-6">Chi tiết chuyến đi</h2>
 
                             <div className="flex flex-wrap items-center gap-6 mb-6 text-gray-600 border-b pb-6">
-                                <span className="flex items-center"><MapPin className="w-5 h-5 mr-2 text-blue-500" /> {tour.location_detail?.name || 'Chưa cập nhật'}</span>
-                                <span className="flex items-center"><Clock className="w-5 h-5 mr-2 text-blue-500" /> {tour.duration}</span>
+                                <span className="flex items-center"><MapPin className="w-5 h-5 mr-2 text-[#005555]" /> {tour.location_detail?.name || 'Chưa cập nhật'}</span>
+                                <span className="flex items-center"><Clock className="w-5 h-5 mr-2 text-[#005555]" /> {tour.duration}</span>
                                 <span className="flex items-center font-semibold text-yellow-500"><Star className="w-5 h-5 mr-2 fill-current" /> {tour.rating} Đánh giá</span>
                             </div>
 
@@ -162,7 +162,7 @@ const TourDetails = () => {
                             <div className="mt-12 pt-8 border-t border-gray-100">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                                     Đánh giá từ khách hàng 
-                                    <span className="ml-3 bg-blue-100 text-blue-800 text-sm py-1 px-3 rounded-full font-semibold">
+                                    <span className="ml-3 bg-[#005555]/10 text-[#005555] text-sm py-1 px-3 rounded-full font-semibold">
                                         {reviews.length} đánh giá
                                     </span>
                                 </h2>
@@ -213,7 +213,7 @@ const TourDetails = () => {
                                             </div>
                                             <div className="mb-5">
                                                 <textarea 
-                                                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none" 
+                                                    className="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-[#005555] focus:border-transparent outline-none transition-all resize-none" 
                                                     rows="4" 
                                                     placeholder="Chia sẻ trải nghiệm của bạn về chuyến đi này..."
                                                     value={newComment}
@@ -224,7 +224,7 @@ const TourDetails = () => {
                                             <button 
                                                 type="submit" 
                                                 disabled={isSubmittingReview}
-                                                className={`px-6 py-3 rounded-xl font-bold text-white transition-all shadow-md ${isSubmittingReview ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5'}`}
+                                                className={`px-6 py-3 rounded-xl font-bold text-white transition-all shadow-md ${isSubmittingReview ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#005555] hover:bg-[#004444] hover:-translate-y-0.5'}`}
                                             >
                                                 {isSubmittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
                                             </button>
@@ -232,7 +232,7 @@ const TourDetails = () => {
                                     ) : (
                                         <div className="bg-gray-50 border border-gray-200 p-5 rounded-xl text-center">
                                             <p className="text-gray-600 mb-3 block">Bạn cần đăng nhập để có thể tham gia đánh giá.</p>
-                                            <Link to="/login" className="inline-block bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition">Đăng nhập ngay</Link>
+                                            <Link to="/login" className="inline-block bg-[#005555] text-white font-semibold py-2 px-6 rounded-lg hover:bg-[#004444] transition">Đăng nhập ngay</Link>
                                         </div>
                                     )}
                                 </div>
@@ -243,7 +243,7 @@ const TourDetails = () => {
                     {/* Cột phải: Form Đặt Tour */}
                     <div className="lg:w-1/3">
                         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-8">
-                            <div className="text-3xl font-bold text-blue-600 mb-6 pb-4 border-b">
+                            <div className="text-3xl font-bold text-[#005555] mb-6 pb-4 border-b">
                                 {Number(tour.price).toLocaleString('vi-VN')} VNĐ <span className="text-sm font-normal text-gray-500">/ người</span>
                             </div>
 
@@ -262,7 +262,7 @@ const TourDetails = () => {
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
-                                        className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:border-blue-500"
+                                        className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:border-[#005555]"
                                         required
                                         min={new Date().toISOString().split('T')[0]} // Không cho chọn ngày trong quá khứ
                                     />
@@ -278,14 +278,14 @@ const TourDetails = () => {
                                         onChange={(e) => setNumberOfPeople(parseInt(e.target.value))}
                                         min="1"
                                         max={tour.available_slots}
-                                        className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:border-blue-500"
+                                        className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:border-[#005555]"
                                         required
                                     />
                                 </div>
 
                                 <div className="flex justify-between items-center mb-6 text-lg font-bold">
                                     <span>Tổng tiền:</span>
-                                    <span className="text-blue-600">{Number(tour.price * numberOfPeople).toLocaleString('vi-VN')} VNĐ</span>
+                                    <span className="text-[#005555]">{Number(tour.price * numberOfPeople).toLocaleString('vi-VN')} VNĐ</span>
                                 </div>
 
                                 {user ? (
@@ -299,7 +299,7 @@ const TourDetails = () => {
                                                     e.target.form.reportValidity();
                                                 }
                                             }}
-                                            className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                                            className="w-full bg-[#005555] text-white font-bold py-3 rounded-lg hover:bg-[#004444] transition-colors"
                                         >
                                             Xác nhận đặt tour ngay
                                         </button>
@@ -319,7 +319,7 @@ const TourDetails = () => {
                                         </button>
                                     </div>
                                 ) : (
-                                    <Link to="/login" className="block text-center w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition-colors">
+                                    <Link to="/login" className="block text-center w-full bg-[#005555] text-white font-bold py-3 rounded-lg hover:bg-[#004444] transition-colors">
                                         Đăng nhập để đặt tour
                                     </Link>
                                 )}
