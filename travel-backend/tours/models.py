@@ -3,6 +3,8 @@ from django.db import models
 class Destination(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    keywords = models.TextField(blank=True, null=True, help_text="Các từ khóa liên quan, cách nhau bằng dấu phẩy (vd: thành phố sương mù, cao nguyên)")
+    info_file = models.FileField(upload_to='destinations/info/', null=True, blank=True, help_text="File text (.txt) chứa thông tin chi tiết về địa điểm này")
 
     def __str__(self):
         return self.name

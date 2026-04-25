@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 import PageBanner from "../components/PageBanner";
@@ -31,14 +31,21 @@ const MyBookings = () => {
 
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!user) {
       navigate("/login");
       return;
     }
+    
+    // Nếu chuyển hướng từ trang khác và có yêu cầu mở tab cụ thể
+    if (location.state && location.state.activeTab) {
+        setActiveTab(location.state.activeTab);
+    }
+
     fetchData();
-  }, [user, navigate]);
+  }, [user, navigate, location.state]);
 
   const fetchData = async () => {
     setLoading(true);

@@ -398,3 +398,55 @@ class AdminDestinationUpdateView(UpdateView):
 class AdminDestinationDeleteView(DeleteView):
     model = Destination
     success_url = reverse_lazy('admin_destinations')
+
+@staff_member_required
+def admin_get_destination_info(request, pk):
+    """Lấy nội dung file text và keywords của địa điểm"""
+    dest = get_object_or_404(Destination, pk=pk)
+    content = ""
+    if dest.info_file:
+        try:
+            with open(dest.info_file.path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception as e:
+            content = f"Lỗi đọc file: {str(e)}"
+    return json_response({
+        'content': content,
+        'keywords': dest.keywords or ""
+    })
+
+@staff_member_required
+def admin_update_destination_info(request, pk):
+    """Cập nhật nội dung file text và keywords của địa điểm"""
+    if request.method == 'POST':
+        dest = get_object_or_404(Destination, pk=pk)
+        content = request.POST.get('content', '')
+        keywords = request.POST.get('keywords', '')
+        
+        dest.keywords = keywords
+        dest.save()
+        
+        # Xử lý file
+        import os
+        from django.core.files.base import ContentFile
+        
+        file_name = f"info_{dest.id}.txt"
+        
+        # Nếu đã có file, ghi đè. Nếu chưa, tạo mới.
+        if dest.info_file:
+            try:
+                with open(dest.info_file.path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            except Exception as e:
+                return json_response({'error': str(e)}, status=500)
+        else:
+            # Tạo file mới thông qua FileField
+            dest.info_file.save(file_name, ContentFile(content.encode('utf-8')))
+            
+        return json_response({'status': 'success'})
+    return json_response({'error': 'Method not allowed'}, status=405)
+
+def json_response(data, status=200):
+    import json
+    from django.http import HttpResponse
+    return HttpResponse(json.dumps(data), content_type="application/json", status=status)

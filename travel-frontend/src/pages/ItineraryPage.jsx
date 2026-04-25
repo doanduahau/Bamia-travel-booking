@@ -190,8 +190,18 @@ const ItineraryPage = () => {
     };
 
     const handleEventClick = (clickInfo) => {
-        const tourId = clickInfo.event.extendedProps.tour_id;
-        if (tourId) navigate(`/tours/${tourId}`);
+        const event = clickInfo.event;
+        const status = event.extendedProps.status;
+        const title = event.title || "";
+
+        // 1. Nếu là đơn hàng trong giỏ (màu cam, tiêu đề có [Giỏ hàng])
+        if (status === 'cart' || title.includes('[Giỏ hàng]')) {
+            navigate('/my-bookings', { state: { activeTab: 'cart' } });
+        } 
+        // 2. Nếu là tour đã thanh toán hoặc chờ thanh toán (đã tạo booking)
+        else {
+            navigate('/my-bookings', { state: { activeTab: 'bookings' } });
+        }
     };
 
     if (loading) {

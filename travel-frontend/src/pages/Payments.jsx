@@ -124,26 +124,25 @@ const Payments = () => {
                 image="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&q=80&w=2000"
             />
             
-            <div className="max-w-4xl mx-auto px-4 py-12 relative z-10">
-
-            <div className="-mt-10 md:-mt-12 flex flex-col md:flex-row gap-8">
-                {/* Chọn phương thức thanh toán */}
-                <div className="md:w-2/3 space-y-6">
-                    <h2 className="text-xl font-bold text-gray-800">Chọn phương thức thanh toán</h2>
+            <div className="max-w-4xl mx-auto px-4 py-8 relative z-10">
+                <div className="mt-2 md:mt-4 flex flex-col md:flex-row gap-8">
+                    {/* Chọn phương thức thanh toán */}
+                    <div className="md:w-2/3 space-y-6">
+                        <h2 className="text-xl font-bold text-gray-800">Chọn phương thức thanh toán</h2>
                     
                     {/* VNPAY */}
                     <div 
-                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'vnpay' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'vnpay' ? 'border-[#007777] bg-[#007777]/5' : 'border-gray-200 hover:border-[#007777]/30'}`}
                         onClick={() => setPaymentMethod('vnpay')}
                     >
                         <div className="w-12 h-12 bg-white border rounded-lg flex items-center justify-center">
-                            <Building className="text-blue-700 font-bold" />
+                            <Building className="text-[#007777] font-bold" />
                         </div>
                         <div className="flex-grow">
                             <h3 className="font-bold text-gray-800 mb-1">VNPAY (ATM Nội địa)</h3>
                             <p className="text-sm text-gray-500">Hỗ trợ tất cả thẻ ATM ngân hàng trong nước</p>
                         </div>
-                        {paymentMethod === 'vnpay' && <CheckCircle className="text-blue-500" />}
+                        {paymentMethod === 'vnpay' && <CheckCircle className="text-[#007777]" />}
                     </div>
 
                     {/* MOMO */}
@@ -163,17 +162,17 @@ const Payments = () => {
 
                     {/* STRIPE */}
                     <div 
-                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'stripe' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300'}`}
+                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all flex items-center gap-4 ${paymentMethod === 'stripe' ? 'border-[#007777] bg-[#007777]/5' : 'border-gray-200 hover:border-[#007777]/30'}`}
                         onClick={() => setPaymentMethod('stripe')}
                     >
-                        <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+                        <div className="w-12 h-12 bg-[#007777] rounded-lg flex items-center justify-center">
                             <CreditCard className="text-white" />
                         </div>
                         <div className="flex-grow">
                             <h3 className="font-bold text-gray-800 mb-1">Thẻ Quốc Tế (Stripe)</h3>
                             <p className="text-sm text-gray-500">Thanh toán bằng thẻ Visa, MasterCard, Amex</p>
                         </div>
-                        {paymentMethod === 'stripe' && <CheckCircle className="text-indigo-500" />}
+                        {paymentMethod === 'stripe' && <CheckCircle className="text-[#007777]" />}
                     </div>
                 </div>
 
@@ -198,9 +197,9 @@ const Payments = () => {
                             onClick={handleInitiatePayment}
                             disabled={isProcessing}
                             className={`w-full font-bold py-3.5 rounded-lg text-white shadow-md transition-all flex justify-center items-center gap-2
-                                ${paymentMethod === 'vnpay' ? 'bg-blue-600 hover:bg-blue-700' : 
+                                ${paymentMethod === 'vnpay' ? 'bg-[#007777] hover:bg-[#005555]' : 
                                   paymentMethod === 'momo' ? 'bg-[#A50064] hover:bg-[#80004d]' : 
-                                  'bg-indigo-600 hover:bg-indigo-700'}
+                                  'bg-[#007777] hover:bg-[#005555]'}
                                 ${isProcessing ? 'opacity-70 cursor-wait' : ''}
                             `}
                         >
