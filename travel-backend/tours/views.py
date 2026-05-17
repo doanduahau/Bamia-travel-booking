@@ -13,8 +13,13 @@ import os
 from .models import Tour, Destination, Category
 from .serializers import TourSerializer, DestinationSerializer, CategorySerializer
 
+try:
+    from bookings.models import Booking, Cart
+except ImportError:
+    Booking, Cart = None, None
+
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-OLLAMA_MODEL = "qwen2.5"
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen2.5:1.5b')
 OLLAMA_TIMEOUT_CONNECT = 5    # Giây chờ kết nối đến Ollama
 OLLAMA_TIMEOUT_READ = 120     # Giây chờ đọc response (model có thể chậm)
 OLLAMA_MAX_RETRIES = 2        # Số lần thử lại tối đa
@@ -122,54 +127,157 @@ class ChatbotAPIView(APIView):
                 return StreamingHttpResponse(safe_gen(), content_type='text/event-stream; charset=utf-8')
             return Response({'reply': safe_reply})
 
-        # --- LOGIC RAG: Cache thông minh theo phiên ---
+        # --- LOGIC RAG: Tìm kiếm dữ liệu khớp ---
         destinations = Destination.objects.exclude(info_file__isnull=True).exclude(info_file='')
         rag_context = ""
         msg_lower = user_message.lower()
-        matched_dest_names = []  # Danh sách địa điểm khớp với câu hỏi hiện tại
-
+        
+        # Bước 1: Quét xem người dùng có nhắc trực tiếp địa danh nào trong tin nhắn hiện tại không
+        direct_matches = []
         for dest in destinations:
             match_found = False
-
-            # 1. Kiểm tra theo tên địa điểm
+            # Kiểm tra tên địa danh
             if dest.name.lower() in msg_lower:
                 match_found = True
-
-            # 2. Kiểm tra theo từ khóa nếu chưa match
-            if not match_found and dest.keywords:
+            # Kiểm tra từ khóa
+            elif dest.keywords:
                 kw_list = [k.strip().lower() for k in dest.keywords.split(',') if k.strip()]
                 for kw in kw_list:
                     if kw and kw in msg_lower:
                         match_found = True
                         break
+            if match_found:
+                direct_matches.append(dest)
 
-            if not match_found:
-                continue
+        # Bước 2: Quyết định danh sách địa điểm sẽ nạp dữ liệu
+        matched_destinations_to_load = []
+        if len(direct_matches) > 0:
+            # Người dùng chủ động nhắc địa danh mới -> ghi đè, xóa sạch cache cũ để tránh tràn context
+            matched_destinations_to_load = direct_matches
+        else:
+            # Hỏi nối tiếp không nhắc tên -> Kích hoạt cache cũ từ loaded_destinations
+            for dest in destinations:
+                if dest.name.lower() in loaded_destinations:
+                    matched_destinations_to_load.append(dest)
 
-            # Địa điểm này khớp → thêm vào matched list
-            matched_dest_names.append(dest.name)
+        matched_dest_names = [dest.name for dest in matched_destinations_to_load]
 
-            # Kiểm tra cache: nếu Frontend đã có → không đọc file lại
-            if dest.name.lower() in loaded_destinations:
-                print(f"[RAG] Cache hit: {dest.name} (đã có ở Frontend, bỏ qua đọc file)")
-                continue
+        # Bước 3: Đọc file dữ liệu của các địa điểm được chọn
+        for dest in matched_destinations_to_load:
 
-            # Cache miss → đọc file mới
+            # Đọc dữ liệu file thực tế (BẮT BUỘC phải đọc để gửi kèm Prompt vì LLM stateless)
             try:
                 file_path = dest.info_file.path
-                print(f"[RAG] Cache miss: Đọc file mới → {file_path}")
                 if os.path.exists(file_path):
+                    print(f"[RAG] Đọc dữ liệu ngữ cảnh cho: {dest.name} -> {file_path}")
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                     # Trim nội dung tối đa 3000 ký tự để tránh context quá lớn
                     if len(content) > 3000:
                         content = content[:3000] + "\n...(còn tiếp)"
                     rag_context += f"\n\n=== DỮ LIỆU ĐỊA ĐIỂM: {dest.name} ===\n{content}\n"
-                    print(f"[RAG] Đã đọc {len(content)} ký tự cho {dest.name}")
                 else:
                     print(f"[RAG] File không tồn tại: {file_path}")
             except Exception as e:
                 print(f"[RAG] Lỗi đọc file {dest.name}: {e}")
+
+        # Nếu system_instruction trống hoặc không chứa danh sách tour, dựng lại prompt trực tiếp từ Database ở Backend!
+        if not system_instruction or "=== DANH SÁCH TOUR ĐANG CÓ ===" not in system_instruction:
+            print("[Chatbot] Khởi động bộ dựng System Prompt dự phòng tại Backend...")
+            tours = Tour.objects.all()
+            tours_text = "=== DANH SÁCH TOUR ĐANG CÓ ===\n"
+            if not tours.exists():
+                tours_text += "Hiện chưa có tour nào.\n"
+            else:
+                for t in tours:
+                    loc = t.location.name if t.location else "N/A"
+                    cat = t.category.name if t.category else "N/A"
+                    tours_text += (
+                        f"\n• [ID:{t.id}] {t.title} (Tour du lịch tại {loc})\n"
+                        f"  Địa điểm: {loc} | Danh mục: {cat}\n"
+                        f"  Giá: {int(t.price):,} VNĐ/người | Thời gian: {t.duration}\n"
+                        f"  Đánh giá: {t.rating}/5 | Còn chỗ: {t.available_slots} slot\n"
+                        f"  Mô tả: {str(t.description)[:150]}...\n"
+                    )
+
+            bookings_text = ""
+            cart_text = ""
+            user_status_text = "=== TRẠNG THÁI NGƯỜI DÙNG ===\n"
+            
+            # Sử dụng request.user (được thiết lập do permission_classes = [IsAuthenticated])
+            if request.user and request.user.is_authenticated:
+                user_status_text += f"• Trạng thái: ĐÃ ĐĂNG NHẬP\n• Tên tài khoản: {request.user.username}\n• Email: {request.user.email}\n"
+                
+                # Nạp lịch sử đặt hàng
+                if Booking:
+                    bookings = Booking.objects.filter(user=request.user)
+                    bookings_text = f"\n=== ĐƠN HÀNG CỦA {request.user.username.upper()} ===\n"
+                    if not bookings.exists():
+                        bookings_text += "Khách hiện chưa có đơn hàng nào trong lịch sử.\n"
+                    else:
+                        for b in bookings:
+                            tour_title = b.tour.title if b.tour else "N/A"
+                            bookings_text += (
+                                f"\n• Đơn #{b.id}: {tour_title}\n"
+                                f"  Ngày đi: {b.date} | Số người: {b.number_of_people}\n"
+                                f"  Tổng tiền: {int(b.total_price):,} VNĐ | Trạng thái: {b.status}\n"
+                            )
+                
+                # Nạp giỏ hàng
+                if Cart:
+                    cart_items = Cart.objects.filter(user=request.user)
+                    cart_text = f"\n=== GIỎ HÀNG CỦA {request.user.username.upper()} (Chưa thanh toán) ===\n"
+                    if not cart_items.exists():
+                        cart_text += "Giỏ hàng hiện đang trống.\n"
+                    else:
+                        for item in cart_items:
+                            tour_title = item.tour.title if item.tour else "N/A"
+                            cart_text += (
+                                f"\n• [ID:{item.id}] {tour_title}\n"
+                                f"  Ngày dự kiến: {item.date or 'Chưa chọn'} | Số người: {item.number_of_people}\n"
+                                f"  Đơn giá: {int(item.tour.price):,} VNĐ | Thành tiền: {int(item.tour.price * item.number_of_people):,} VNĐ\n"
+                            )
+                        cart_text += "\nLưu ý: Đây là những tour khách đã thêm vào giỏ nhưng chưa thanh toán. Hãy khuyến khích họ đặt tour nếu họ đang phân vân.\n"
+            else:
+                user_status_text += "• Trạng thái: CHƯA ĐĂNG NHẬP (Khách vãng lai)\n• Quyền: Chỉ được xem tour, không có quyền truy cập thông tin cá nhân hay đơn hàng.\n"
+
+            # Bản sao quy tắc hệ thống chuẩn của ChatbotUtils
+            system_instruction = (
+                "Bạn là AI trợ lý du lịch của TravelBaMia.\n"
+                "Nhiệm vụ của bạn là trả lời khách hàng cực kỳ NGẮN GỌN, ĐI THẲNG VÀO Ý CHÍNH, KHÔNG VÒNG VO.\n\n"
+                "=== QUY TẮC DỮ LIỆU TOUR (TUYỆT ĐỐI KHÔNG BỊA ĐẶT) ===\n"
+                "1. Bạn CHỈ ĐƯỢC PHÉP tư vấn các tour nằm trong mục 'DANH SÁCH TOUR ĐANG CÓ' ở bên dưới.\n"
+                "2. Tuyệt đối KHÔNG ĐƯỢC tự tạo, tự thiết kế hoặc tự bịa ra bất kỳ lịch trình tour giả lập nào (như 'Tour 3 ngày 2 đêm', 'Tour 4 ngày 3 đêm'...) cho các địa điểm chưa có tour chính thức trong danh sách. Nếu khách hỏi tour về địa điểm chưa có (ví dụ: Đà Lạt, Huế, Sa Pa...), bạn BẮT BUỘC phải từ chối thẳng thắn và lịch sự: 'Hiện tại bên em chưa có tour đi [Địa danh]. Hẹn anh/chị dịp khác ạ!'. Tuyệt đối KHÔNG gợi ý thêm lịch trình tự chế hay liệt kê các điểm đến xen kẽ của tỉnh khác để tránh gây nhầm lẫn!\n"
+                "3. Ưu tiên cao nhất cho dữ liệu tour thực tế được cung cấp.\n"
+                "4. Khi khách hàng hỏi chung về danh sách các tour (ví dụ: 'bên bạn có những tour nào?', 'ở đây có những tour gì?', 'liệt kê các tour du lịch...'), bạn BẮT BUỘC phải liệt kê TÊN của tối đa 3 tour nổi bật nhất (Nếu hệ thống có ít hơn 3 tour thì liệt kê hết những gì đang có; ưu tiên chọn các tour có rating cao nhất hoặc chọn ngẫu nhiên/lấy đại bất kỳ). Chỉ liệt kê TÊN của tour và đính kèm nhãn '[TOUR_CARD:ID]' ở cuối tên đó (Ví dụ: '1. Tour Khám Phá Đà Lạt [TOUR_CARD:1]'). Tuyệt đối KHÔNG viết mô tả chi tiết, giá tiền, hay lịch trình của các tour trong câu trả lời chữ, vì khách hàng sẽ tự xem chi tiết ở thẻ Card trực quan hoặc hỏi chi tiết sau nếu muốn!\n"
+                "5. Khi khách hàng hỏi xem tour của một địa danh cụ thể (ví dụ: 'cho tôi xem tour du lịch đà lạt', 'tour nha trang có gì'), bạn BẮT BUỘC phải đối chiếu địa danh đó với trường 'Địa điểm' (Location) trong danh sách tour đang có ở dưới. Ví dụ: Tour 'Quảng Trường Lâm Viên' có Địa điểm là 'Đà Lạt', điều này nghĩa là nó CHÍNH LÀ tour Đà Lạt! Bạn phải giới thiệu tour này và đính kèm nhãn '[TOUR_CARD:1]' ngay lập tức. Cấm nói dối là không có nếu tour đó thực sự tồn tại trong danh sách!\n\n"
+                "=== QUY TẮC HIỂN THỊ THẺ TOUR (BẮT BUỘC) ===\n"
+                "1. Khi khách hàng hỏi thông tin chi tiết về một tour, yêu cầu 'cho xem tour', hoặc khi bạn chủ động giới thiệu/đề xuất một tour cụ thể:\n"
+                "   - Bạn BẮT BUỘC phải đính kèm nhãn '[TOUR_CARD:ID]' ở cuối câu trả lời (với ID là ID của tour đó trong danh sách).\n\n"
+                "=== QUY TẮC VỀ ĐỊA CHỈ & THÔNG TIN CÔNG CỘNG (QUAN TRỌNG) ===\n"
+                "1. Khi khách hàng hỏi về địa chỉ, thông tin cụ thể của các quán ăn, nhà hàng, khách sạn, danh lam thắng cảnh trong 'DỮ LIỆU ĐỊA ĐIỂM', bạn HOÀN TOÀN ĐƯỢC PHÉP và BẮT BUỘC phải cung cấp chính xác địa chỉ của chúng từ file tài liệu.\n"
+                "2. Tuyệt đối KHÔNG ĐƯỢC từ chối trả lời địa chỉ của các quán ăn, nhà hàng với lý do 'bảo mật' hay 'không được niêm phong' hay 'thông tin riêng tư/nhạy cảm'. Đó là thông tin du lịch công cộng hữu ích!\n\n"
+                "=== QUY TẮC XƯNG HÔ & BẢO MẬT (QUAN TRỌNG) ===\n"
+                "1. Kiểm tra mục 'TRẠNG THÁI NGƯỜI DÙNG' bên dưới để biết thông tin khách hàng.\n"
+                "2. Khi trạng thái là 'ĐÃ ĐĂNG NHẬP':\n"
+                "   - Bạn HOÀN TOÀN có quyền đọc và sử dụng tên tài khoản (username) hoặc email của họ.\n"
+                "   - LUÔN LUÔN chào hỏi và gọi họ bằng tên tài khoản của họ. Tuyệt đối KHÔNG ĐƯỢC từ chối và nói 'Tôi không có quyền truy cập thông tin cá nhân' khi họ hỏi tên của họ!\n"
+                "3. Khi trạng thái là 'CHƯA ĐĂNG NHẬP':\n"
+                "   - Yêu cầu họ đăng nhập để hỗ trợ các thông tin cá nhân hoặc giỏ hàng.\n\n"
+                "=== QUY TẮC CẤT GIẢM ĐỘ DÀI (BẮT BUỘC) ===\n"
+                "1. Trả lời ngay lập tức trọng tâm câu hỏi. KHÔNG có phần dẫn dắt dài dòng, không dùng từ thừa.\n"
+                "2. Giới hạn câu trả lời trong khoảng 2 - 4 câu ngắn hoặc danh sách tối đa 3 - 4 gạch đầu dòng.\n"
+                "3. KHÔNG chào hỏi lặp đi lặp lại dài dòng. Chỉ cần chào rất ngắn ở câu đầu tiên (ví dụ: 'Chào bạn, ...'), các câu sau đi thẳng vào trả lời.\n"
+                "4. KHÔNG viết kết luận, cảm ơn hay lời chúc sáo rỗng dài dòng ở cuối mỗi tin nhắn.\n\n"
+                "=== QUY TẮC TRÌNH BÀY ===\n"
+                "1. LUÔN LUÔN trình bày thông tin theo dạng gạch đầu dòng (•) súc tích để khách hàng dễ đọc lướt nhanh.\n"
+                "2. Mỗi gạch đầu dòng chỉ dài tối đa 1 dòng. Tránh các đoạn văn dài.\n\n"
+                "=== QUY TẮC CẤM (TUYỆT ĐỐI) ===\n"
+                "1. TUYỆT ĐỐI KHÔNG dùng nhãn [TASK_COMPLETE], [DONE], [SUCCESS]... trong câu trả lời.\n"
+                "2. CHỈ dùng [TOUR_CARD:ID] hoặc [ESCALATE] khi thật sự cần thiết.\n"
+                "3. Không trả lời về technical (mã nguồn, database, hoặc các vấn đề kỹ thuật khác).\n\n"
+                f"{user_status_text}{tours_text}{bookings_text}{cart_text}"
+            )
 
         # --- Chuẩn bị messages cho Ollama ---
         ollama_messages = []
@@ -177,8 +285,8 @@ class ChatbotAPIView(APIView):
         # 1. System Prompt
         ollama_messages.append({"role": "system", "content": system_instruction})
 
-        # 2. History (chỉ giữ 8 tin nhắn gần nhất để giảm context)
-        for msg in history[-8:]:
+        # 2. History (giữ 10 tin nhắn gần nhất theo yêu cầu)
+        for msg in history[-10:]:
             role = msg.get("role", "user")
             content = msg.get("content", "")
             if role in ("user", "assistant") and content:

@@ -18,7 +18,7 @@ import ChatbotInput from "./chatbox/ChatbotInput";
 import StatusBanner from "./chatbox/StatusBanner";
 
 const Chatbot = () => {
-  const { user } = useContext(AuthContext);
+  const { user, loading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
   const { streamChat } = useStreamChat();
 
@@ -42,6 +42,17 @@ const Chatbot = () => {
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Tự động cuộn mượt mà xuống dưới đáy khung chat
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    // Đặt delay nhỏ để bảo đảm DOM đã hoàn tất vẽ giao diện trước khi cuộn
+    const timer = setTimeout(scrollToBottom, 80);
+    return () => clearTimeout(timer);
+  }, [messages, streamingText, isOpen]);
 
   // ── Load history ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -70,6 +81,7 @@ const Chatbot = () => {
 
   // ── Reset khi logout ───────────────────────────────────────────────────────
   useEffect(() => {
+    if (authLoading) return; // Chờ auth loading xong rồi mới kiểm tra, tránh race condition xóa sạch dữ liệu khi reload!
     if (!user) {
       setMessages([initialMessage]);
       setHistory([]);
@@ -78,7 +90,7 @@ const Chatbot = () => {
       setOllamaStatus("unknown");
       localStorage.removeItem(CHAT_STORAGE_KEY);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   // ── Hàm fetch dữ liệu ──────────────────────────────────────────────────────
   const fetchContextData = useCallback(async (silent = false) => {
@@ -193,6 +205,10 @@ const Chatbot = () => {
     if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử cuộc trò chuyện này?")) {
       setMessages([initialMessage]);
       setHistory([]);
+      setLoadedDestinations([]); // Xóa sạch hoàn toàn cache địa danh đang hoạt động
+      setStreamingText("");
+      setIsLoading(false);
+      setInput("");
       localStorage.removeItem(CHAT_STORAGE_KEY);
     }
   };

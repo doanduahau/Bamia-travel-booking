@@ -6,3 +6,4 @@ django-filter
 Pillow
 python-dotenv
 requests
+psycopg[binary]

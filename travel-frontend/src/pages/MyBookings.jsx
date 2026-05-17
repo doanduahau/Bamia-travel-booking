@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Timer,
   RotateCcw,
+  MapPin,
 } from "lucide-react";
 
 const BACKEND_BASE_URL =
@@ -29,11 +30,13 @@ const MyBookings = () => {
   const [loading, setLoading] = useState(true);
   const [togglingCalendar, setTogglingCalendar] = useState({});
 
-  const { user } = useContext(AuthContext);
+  const { user, loading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    if (authLoading) return; // Chờ cho đến khi kiểm tra xong token trong AuthContext
+
     if (!user) {
       navigate("/login");
       return;
@@ -45,7 +48,7 @@ const MyBookings = () => {
     }
 
     fetchData();
-  }, [user, navigate, location.state]);
+  }, [user, authLoading, navigate, location.state]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -266,7 +269,7 @@ const MyBookings = () => {
     });
   };
 
-  if (loading)
+  if (authLoading || loading)
     return (
       <div className="bg-slate-50 min-h-screen pb-20">
         <PageBanner
@@ -357,7 +360,7 @@ const MyBookings = () => {
                       : "border-slate-200 opacity-75"
                   }`}
                 >
-                  <div className="flex-grow">
+                  <div className="flex-grow w-full md:w-auto">
                     <h3 className="text-xl font-bold text-gray-800 mb-2">
                       Mã đơn: #{booking.id}
                     </h3>
@@ -369,6 +372,19 @@ const MyBookings = () => {
                       <Users className="inline w-4 h-4 mr-1" /> Số người:{" "}
                       {booking.number_of_people}
                     </p>
+                    
+                    {/* Thông báo điểm tập trung khi đã thanh toán */}
+                    {booking.status === "Paid" && (
+                      <div className="mt-4 p-4 bg-emerald-50/80 border border-emerald-100 rounded-xl flex items-start gap-3 text-emerald-800 max-w-xl shadow-sm transition-all duration-200">
+                        <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-bold text-emerald-950 text-sm">📍 Điểm tập trung & Đón khách:</h4>
+                          <p className="text-sm mt-1 text-emerald-800 leading-relaxed">
+                            Hẹn bạn ở <strong className="text-[#007777] font-bold">PTITHCM</strong> (Số 97 đường Man Thiện, Phường Hiệp Phú, TP. Thủ Đức (Quận 9 cũ), TP. Hồ Chí Minh). Sẽ có xe đưa rước bạn ở đó!
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-right flex flex-col items-end gap-2">

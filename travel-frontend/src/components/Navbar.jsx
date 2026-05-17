@@ -11,7 +11,8 @@ const Navbar = () => {
 
     const isLogin = location.pathname === '/login';
     const isRegister = location.pathname === '/register';
-    const isAuthPage = isLogin || isRegister;
+    const isResetPassword = location.pathname.startsWith('/reset-password');
+    const isAuthPage = isLogin || isRegister || isResetPassword;
 
     // Class style cho link
     const linkClass = (path) => `
@@ -24,7 +25,7 @@ const Navbar = () => {
 
     let navClasses = "absolute top-6 inset-x-0 mx-auto w-[95%] max-w-7xl z-50";
     
-    if (isLogin) {
+    if (isLogin || isResetPassword) {
         navClasses = "absolute top-6 inset-x-0 mx-auto lg:inset-x-auto lg:left-8 lg:mx-0 w-[95%] lg:w-[calc(50%-64px)] z-50";
     } else if (isRegister) {
         navClasses = "absolute top-6 inset-x-0 mx-auto lg:inset-x-auto lg:right-8 lg:mx-0 w-[95%] lg:w-[calc(50%-64px)] z-50";

@@ -25,7 +25,7 @@ from core.views import (
     AdminCategoryListView, AdminCategoryCreateView, AdminCategoryUpdateView, AdminCategoryDeleteView,
     AdminDestinationListView, AdminDestinationCreateView, AdminDestinationUpdateView, AdminDestinationDeleteView,
     AdminBookingListView, admin_change_booking_status, AdminReviewListView, AdminReviewDeleteView,
-    AdminForgotPasswordView, AdminUserListView, AdminUserUpdateView, AdminSupportRequestListView, admin_complete_support_request, admin_reset_user_password, admin_toggle_user_status,
+    AdminForgotPasswordView, AdminUserListView, AdminUserUpdateView, AdminSupportRequestListView, admin_complete_support_request, admin_toggle_user_status,
     admin_get_destination_info, admin_update_destination_info
 )
 from django.contrib.auth.views import LogoutView
@@ -63,7 +63,6 @@ urlpatterns = [
     
     path('admin/users/', AdminUserListView.as_view(), name='admin_users'),
     path('admin/users/<int:pk>/edit/', AdminUserUpdateView.as_view(), name='admin_user_edit'),
-    path('admin/users/<int:user_id>/reset-password/', admin_reset_user_password, name='admin_reset_user_password'),
     path('admin/users/<int:user_id>/toggle-status/', admin_toggle_user_status, name='admin_toggle_user_status'),
     
     path('admin/requests/', AdminSupportRequestListView.as_view(), name='admin_requests'),

@@ -23,7 +23,7 @@ const useStreamChat = () => {
         body: JSON.stringify({
           message,
           system_instruction,
-          history: history.slice(-10),  // Giảm từ 20 → 10 để gửi ít hơn, nhanh hơn
+          history: history.slice(-10),  // Gửi 10 tin nhắn gần nhất (5 lượt chat của AI và Khách) theo yêu cầu
           loaded_destinations,   // Gửi cache lên Backend
           stream: true,
         }),
@@ -66,9 +66,9 @@ const useStreamChat = () => {
               fullText += parsed.token;
               onToken(parsed.token);
             }
+            // Đợi stream đóng tự nhiên để lấy trọn vẹn chunk meta cuối cùng
             if (parsed.done) {
-              onDone(fullText, null, matchedDestinations);
-              return;
+              // Ghi nhận trạng thái hoàn thành nhưng không return sớm để đợi đọc meta chunk
             }
           } catch {
             // Bỏ qua JSON lỗi parse

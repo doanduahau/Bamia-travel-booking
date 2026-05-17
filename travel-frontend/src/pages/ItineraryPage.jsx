@@ -16,10 +16,12 @@ const ItineraryPage = () => {
     const [weatherMap, setWeatherMap] = useState({}); 
     const [weatherError, setWeatherError] = useState('');
     const [loading, setLoading] = useState(true);
-    const { user } = useContext(AuthContext);
+    const { user, loading: authLoading } = useContext(AuthContext);
     const navigate = useNavigate();
 
     useEffect(() => {
+        if (authLoading) return; // Chờ cho đến khi xác thực token xong
+
         if (!user) {
             navigate('/login');
             return;
@@ -132,7 +134,7 @@ const ItineraryPage = () => {
         };
 
         fetchAllData();
-    }, [user, navigate]);
+    }, [user, authLoading, navigate]);
 
     // HÀM: Render Widget Thời Tiết nhúng vào từng ô ngày
     const renderDayCell = (cellInfo) => {

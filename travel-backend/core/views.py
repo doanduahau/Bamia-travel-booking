@@ -207,28 +207,7 @@ def admin_complete_support_request(request, pk):
     messages.success(request, f"Đã hoàn thành yêu cầu của {sender_name}")
     return redirect('admin_requests')
 
-@staff_member_required
-def admin_reset_user_password(request, user_id):
-    user = get_object_or_404(User, id=user_id)
-    
-    if user.is_superuser and not request.user.is_superuser:
-        messages.error(request, "Bạn không có quyền cấp lại mật khẩu cho Superuser.")
-        return redirect('admin_users')
 
-    new_password = get_random_string(length=10)
-    user.set_password(new_password)
-    user.save()
-
-    subject = 'Mật khẩu mới cho tài khoản TravelBaMia'
-    message = f'Chào {user.username},\n\nQuản trị viên đã cấp lại mật khẩu mới cho bạn.\nMật khẩu mới là: {new_password}\n\nVui lòng đăng nhập và đổi mật khẩu ngay.\n\nTrân trọng,'
-    
-    try:
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-        messages.success(request, f"Đã cấp lại mật khẩu cho {user.username} thành công! Mật khẩu mới: {new_password} (Đã gửi tới email khách hàng)")
-    except Exception as e:
-        messages.warning(request, f"Đã đổi mật khẩu cho {user.username} thành công! Mật khẩu mới: {new_password} (Tuy nhiên lỗi gửi email: {str(e)})")
-
-    return redirect('admin_user_edit', pk=user_id)
 
 @staff_member_required
 def admin_toggle_user_status(request, user_id):

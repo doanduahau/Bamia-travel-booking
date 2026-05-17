@@ -6,6 +6,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     const decodePayload = (token) => {
@@ -42,6 +43,7 @@ export const AuthProvider = ({ children }) => {
                 logout();
             }
         }
+        setLoading(false);
     }, []);
 
     const login = (accessToken, refreshToken) => {
@@ -51,6 +53,7 @@ export const AuthProvider = ({ children }) => {
         }
         const decodedUser = jwtDecode(accessToken);
         setUser(decodedUser);
+        setLoading(false);
         navigate('/'); // Chuyển về trang chủ sau khi login
     };
 
@@ -58,6 +61,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         setUser(null);
+        setLoading(false);
     };
 
     const updateUser = (userData) => {
@@ -65,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

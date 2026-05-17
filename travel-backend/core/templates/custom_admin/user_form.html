@@ -33,24 +33,12 @@
                         <a href="{% url 'admin_users' %}" class="text-sm font-semibold text-gray-500 hover:text-gray-700 flex items-center">
                             <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Quay lại
                         </a>
-                        {% if object.id %}
-                        <button type="submit" form="reset-password-form" class="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center">
-                            <i data-lucide="key-round" class="w-4 h-4 mr-1"></i> Cấp lại mật khẩu & Gửi Email
-                        </button>
-                        {% endif %}
                     </div>
                     <button type="submit" class="bg-[#005555] text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-[#005555]/20 hover:bg-[#004444] transition-all">
                         Lưu thông tin
                     </button>
                 </div>
             </form>
-
-            {% if object.id %}
-            <form id="reset-password-form" action="{% url 'admin_reset_user_password' object.id %}" method="POST" class="hidden"
-                onsubmit="return confirm('Bạn có chắc chắn muốn cấp lại mật khẩu ngẫu nhiên cho khách hàng này? Mật khẩu mới sẽ được gửi ngay về email của họ.')">
-                {% csrf_token %}
-            </form>
-            {% endif %}
         </div>
     </div>
 </div>

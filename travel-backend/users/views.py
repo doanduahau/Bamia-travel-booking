@@ -11,6 +11,11 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from .models import SupportRequest
 
+# Thư viện bảo mật tích hợp sẵn của Django phục vụ việc tạo Token và mã hóa UID
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
@@ -26,32 +31,84 @@ class ForgotPasswordView(APIView):
         
         try:
             user = User.objects.get(email=email)
-            # Tạo mật khẩu ngẫu nhiên mới
-            new_password = get_random_string(length=10)
-            user.set_password(new_password)
-            user.save()
+            
+            # Sử dụng thư viện của Django để tạo Token bảo mật một lần và mã hóa ID người dùng (UID)
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Tạo đường dẫn trỏ về trang Reset Password của Frontend
+            # Mặc định React FE chạy cổng 5173
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+            reset_link = f"{frontend_url}/reset-password/{uid}/{token}"
 
-            # Gửi email
+            # Gửi email chứa đường dẫn đặt lại mật khẩu
             subject = 'Khôi phục mật khẩu TravelBaMia'
-            message = f'Chào {user.username},\n\nMật khẩu mới của bạn là: {new_password}\n\nVui lòng đăng nhập và đổi mật khẩu ngay sau đó để bảo mật tài khoản.\n\nTrân trọng,\nĐội ngũ TravelBaMia'
+            message = (
+                f'Chào {user.username},\n\n'
+                f'Bạn nhận được email này vì đã yêu cầu khôi phục mật khẩu cho tài khoản tại TravelBaMia.\n'
+                f'Vui lòng nhấn vào đường dẫn dưới đây để tiến hành đặt mật khẩu mới:\n\n'
+                f'{reset_link}\n\n'
+                f'Lưu ý: Liên kết này chỉ có hiệu lực sử dụng một lần và sẽ hết hạn sau một khoảng thời gian nhất định.\n'
+                f'Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng bỏ qua email này.\n\n'
+                f'Trân trọng,\nĐội ngũ TravelBaMia'
+            )
             email_from = settings.DEFAULT_FROM_EMAIL
             recipient_list = [email]
             
             send_mail(subject, message, email_from, recipient_list)
 
-            # Create Support Request record
-            SupportRequest.objects.create(
-                user=user,
-                request_type='FORGOT_PASSWORD',
-                content=f"Yêu cầu khôi phục mật khẩu từ trang Login. Mật khẩu mới đã được gửi: {new_password}",
-                status='PROCESSING'
-            )
-
-            return Response({"success": "Mật khẩu mới đã được gửi về email của bạn!"}, status=status.HTTP_200_OK)
+            return Response({"success": "Liên kết đặt lại mật khẩu đã được gửi về email của bạn!"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "Không tìm thấy người dùng với email này"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ResetPasswordConfirmView(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        # API GET dùng để xác thực nhanh xem liên kết Token có còn hợp lệ hay không khi trang vừa load
+        uidb64 = request.query_params.get('uid')
+        token = request.query_params.get('token')
+
+        if not uidb64 or not token:
+            return Response({"error": "Thiếu thông tin xác thực"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Liên kết không hợp lệ"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Liên kết khôi phục mật khẩu đã hết hạn hoặc đã được sử dụng!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"success": "Liên kết hợp lệ"}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        uidb64 = request.data.get('uid')
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+
+        if not uidb64 or not token or not new_password:
+            return Response({"error": "Thiếu thông tin bắt buộc"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Giải mã mã hóa UID để lấy ID của User
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Đường dẫn không hợp lệ hoặc người dùng không tồn tại"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Xác thực Token của Django xem có khớp và có còn hạn hay không
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Liên kết khôi phục mật khẩu đã hết hạn hoặc đã được sử dụng!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Lưu mật khẩu mới và lưu vào database
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({"success": "Mật khẩu đã được đặt lại thành công!"}, status=status.HTTP_200_OK)
 
 class SupportRequestCreateView(generics.CreateAPIView):
     queryset = SupportRequest.objects.all()
