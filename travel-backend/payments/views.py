@@ -88,7 +88,7 @@ class WebhookIPNView(APIView):
             transaction.status = 'Failed'
             transaction.save()
             # Khi hủy/thất bại → Cancel các Booking nhưng GIỮ LẠI cart items
-            transaction.bookings.all().update(status='Cancelled')
+            transaction.bookings.all().update(status='Pending')
             return Response({'message': 'IPN Processed: Giao dịch thất bại'})
 
 
