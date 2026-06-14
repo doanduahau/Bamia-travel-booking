@@ -12,7 +12,8 @@ from rest_framework.permissions import IsAdminUser
 from django.contrib.auth.models import User
 from tours.models import Tour
 from django.utils import timezone
-
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
@@ -23,19 +24,37 @@ class BookingViewSet(viewsets.ModelViewSet):
         return Booking.objects.filter(
             user=self.request.user,
             deleted_at__isnull=True
-        ).exclude(status='Cancelled')
+        )
 
     def perform_create(self, serializer):
-        tour = serializer.validated_data['tour']
+        tour_instance = serializer.validated_data['tour']
         people = serializer.validated_data.get('number_of_people', 1)
-        total_price = tour.price * people
-        serializer.save(user=self.request.user, total_price=total_price)
+
+        with transaction.atomic():
+            tour = Tour.objects.select_for_update().get(id=tour_instance.id)
+            if tour.available_slots < people:
+                raise ValidationError({'detail': f'Không đủ chỗ. Chỉ còn {tour.available_slots} chỗ trống.'})
+            
+            tour.available_slots -= people
+            tour.save(update_fields=['available_slots'])
+
+            total_price = tour.price * people
+            serializer.save(user=self.request.user, total_price=total_price, tour=tour)
 
     def destroy(self, request, *args, **kwargs):
         """Xoá mềm: chuyển vào thùng rác thay vì xoá vĩnh viễn."""
-        booking = self.get_object()
-        booking.deleted_at = timezone.now()
-        booking.save(update_fields=['deleted_at'])
+        with transaction.atomic():
+            booking = self.get_object()
+            if not booking.deleted_at:
+                booking.deleted_at = timezone.now()
+                booking.save(update_fields=['deleted_at'])
+                
+                # Restore slots if it was not Cancelled
+                if booking.status != 'Cancelled':
+                    tour = Tour.objects.select_for_update().get(id=booking.tour.id)
+                    tour.available_slots += booking.number_of_people
+                    tour.save(update_fields=['available_slots'])
+
         return Response(
             {'status': 'Đã chuyển vào thùng rác', 'id': booking.id},
             status=status.HTTP_200_OK
@@ -54,17 +73,29 @@ class BookingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='restore')
     def restore(self, request, pk=None):
         """Khôi phục booking từ thùng rác."""
-        booking = Booking.objects.filter(
-            id=pk, user=request.user, deleted_at__isnull=False
-        ).first()
-        if not booking:
-            return Response(
-                {'error': 'Không tìm thấy đơn hàng trong thùng rác'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        booking.deleted_at = None
-        booking.save(update_fields=['deleted_at'])
-        return Response({'status': 'Đã khôi phục', 'id': booking.id})
+        with transaction.atomic():
+            booking = Booking.objects.select_for_update().filter(
+                id=pk, user=request.user, deleted_at__isnull=False
+            ).first()
+            if not booking:
+                return Response(
+                    {'error': 'Không tìm thấy đơn hàng trong thùng rác'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            if booking.status != 'Cancelled':
+                tour = Tour.objects.select_for_update().get(id=booking.tour.id)
+                if tour.available_slots < booking.number_of_people:
+                    return Response(
+                        {'error': f'Không đủ chỗ để khôi phục. Tour chỉ còn {tour.available_slots} chỗ trống.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                tour.available_slots -= booking.number_of_people
+                tour.save(update_fields=['available_slots'])
+
+            booking.deleted_at = None
+            booking.save(update_fields=['deleted_at'])
+            return Response({'status': 'Đã khôi phục', 'id': booking.id})
 
     @action(detail=True, methods=['delete'], url_path='permanent-delete')
     def permanent_delete(self, request, pk=None):
@@ -95,19 +126,27 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], url_path='cancel')
     def cancel(self, request, pk=None):
-        booking = self.get_object()
-        if booking.status == 'Pending':
-            # Chuyển vào thùng rác thay vì xoá luôn
-            booking.deleted_at = timezone.now()
-            booking.save(update_fields=['deleted_at'])
+        with transaction.atomic():
+            booking = self.get_object()
+            if booking.status == 'Pending':
+                if not booking.deleted_at:
+                    # Chuyển vào thùng rác thay vì xoá luôn
+                    booking.deleted_at = timezone.now()
+                    booking.save(update_fields=['deleted_at'])
+                    
+                    # Hoàn lại chỗ
+                    tour = Tour.objects.select_for_update().get(id=booking.tour.id)
+                    tour.available_slots += booking.number_of_people
+                    tour.save(update_fields=['available_slots'])
+
+                return Response(
+                    {'status': 'Đã hủy đơn hàng và chuyển vào thùng rác'},
+                    status=status.HTTP_200_OK
+                )
             return Response(
-                {'status': 'Đã hủy đơn hàng và chuyển vào thùng rác'},
-                status=status.HTTP_200_OK
+                {'error': 'Không thể hủy đơn hàng này'},
+                status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(
-            {'error': 'Không thể hủy đơn hàng này'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
 
     @action(detail=True, methods=['patch'], url_path='toggle-calendar')
     def toggle_calendar(self, request, pk=None):

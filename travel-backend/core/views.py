@@ -5,6 +5,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.db.models import Sum, Q
+from django.db import transaction
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -97,6 +98,11 @@ class AdminBookingListView(ListView):
         if status:
             queryset = queryset.filter(status=status)
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = Booking.STATUS_CHOICES
+        return context
 
 class AdminForgotPasswordView(View):
     def post(self, request):
@@ -232,12 +238,29 @@ def admin_toggle_user_status(request, user_id):
 @staff_member_required(login_url='admin_login')
 def admin_change_booking_status(request, pk):
     if request.method == 'POST':
-        booking = get_object_or_404(Booking, pk=pk)
         new_status = request.POST.get('status')
         valid_statuses = [choice[0] for choice in Booking.STATUS_CHOICES]
         if new_status in valid_statuses:
-            booking.status = new_status
-            booking.save()
+            with transaction.atomic():
+                booking = get_object_or_404(Booking.objects.select_for_update(), pk=pk)
+                old_status = booking.status
+
+                if old_status != new_status:
+                    if not booking.deleted_at:
+                        tour = Tour.objects.select_for_update().get(id=booking.tour.id)
+                        
+                        if new_status == 'Cancelled' and old_status != 'Cancelled':
+                            tour.available_slots += booking.number_of_people
+                            tour.save(update_fields=['available_slots'])
+                        elif old_status == 'Cancelled' and new_status != 'Cancelled':
+                            if tour.available_slots < booking.number_of_people:
+                                messages.error(request, f"Không thể đổi trạng thái. Tour chỉ còn {tour.available_slots} chỗ trống.")
+                                return redirect('admin_bookings')
+                            tour.available_slots -= booking.number_of_people
+                            tour.save(update_fields=['available_slots'])
+
+                    booking.status = new_status
+                    booking.save(update_fields=['status'])
     return redirect('admin_bookings')
 
 @method_decorator(staff_member_required(login_url='admin_login'), name='dispatch')
