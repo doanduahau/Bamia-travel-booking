@@ -6,9 +6,9 @@ services:
     container_name: bamia_postgres
     restart: always
     environment:
-      POSTGRES_DB: travel_db
-      POSTGRES_USER: travel_user
-      POSTGRES_PASSWORD: travel_password
+      POSTGRES_DB: bamia_db
+      POSTGRES_USER: bamia
+      POSTGRES_PASSWORD: 123
     ports:
       - "5432:5432"
     volumes:

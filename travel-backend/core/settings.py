@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'bookings',
     'reviews',
     'payments',
+    'chatbot',
     'django_filters'
 ]
 

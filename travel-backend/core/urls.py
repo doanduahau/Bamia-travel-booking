@@ -4,7 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
-from tours.views import TourViewSet, DestinationViewSet, CategoryViewSet, ChatbotAPIView, OllamaHealthView
+from tours.views import TourViewSet, DestinationViewSet, CategoryViewSet
+from chatbot.views import ChatbotAPIView, OllamaHealthView
 from bookings.views import BookingViewSet, CartViewSet
 from reviews.views import ReviewViewSet
 from bookings.views import BookingViewSet, CartViewSet, MyItineraryView, AdminDashboardView
