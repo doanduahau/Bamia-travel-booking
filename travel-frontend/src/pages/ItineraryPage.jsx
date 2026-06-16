@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import api from '../api/axios'; 
-import axios from 'axios';       
+import api from '../api/axios';
+import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import PageBanner from '../components/PageBanner';
 
@@ -13,7 +13,7 @@ const BANNER_IMAGE = 'https://images.unsplash.com/photo-1516738901171-8eb4fc13bd
 const ItineraryPage = () => {
     const calendarRef = useRef(null);
     const [events, setEvents] = useState([]);
-    const [weatherMap, setWeatherMap] = useState({}); 
+    const [weatherMap, setWeatherMap] = useState({});
     const [weatherError, setWeatherError] = useState('');
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useContext(AuthContext);
@@ -37,7 +37,7 @@ const ItineraryPage = () => {
                 // 2. Lấy danh sách các Thành Phố duy nhất có trong giỏ hàng/đã đặt
                 const locations = [...new Set(itineraryEvents.map(e => e.extendedProps?.location_name).filter(Boolean))];
 
-                const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY; 
+                const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
                 if (!API_KEY) {
                     setWeatherError('Thiếu VITE_OPENWEATHER_API_KEY. Hãy kiểm tra file .env và khởi động lại frontend.');
                     return;
@@ -45,7 +45,7 @@ const ItineraryPage = () => {
 
                 const dailyWeather = {}; // Lưu trữ theo dạng: dailyWeather[Y-M-D][CityName] = { temp, icon... }
 
-                const normalizeCityName = (city) => {
+                const normalizeCityName = (city) => { // Chuyển tên thành phố sang tiếng Anh để gọi API
                     const map = {
                         'hà nội': 'Ha Noi',
                         'hồ chí minh': 'Ho Chi Minh City',
@@ -57,11 +57,11 @@ const ItineraryPage = () => {
                     return map[lower] || city;
                 };
 
-                const fetchForecastByCity = async (city) => {
+                const fetchForecastByCity = async (city) => { // Gọi api dự báo thời tiết 5 ngày liên tiếp
                     const normalizedCity = normalizeCityName(city);
                     try {
                         // Ưu tiên geocoding để xử lý tên thành phố tiếng Việt có dấu
-                        const geoRes = await axios.get('https://api.openweathermap.org/geo/1.0/direct', {
+                        const geoRes = await axios.get('https://api.openweathermap.org/geo/1.0/direct', { // lấy vĩ độ/kinh độ
                             params: {
                                 q: normalizedCity,
                                 limit: 1,
@@ -85,7 +85,7 @@ const ItineraryPage = () => {
                         // fallback bên dưới
                     }
 
-                    // Fallback theo q=city
+                    // Fallback theo q=city (Nếu lỗi lấy vĩ độ/kinh độ thì gọi API theo tên thành phố)
                     return axios.get('https://api.openweathermap.org/data/2.5/forecast', {
                         params: {
                             q: normalizedCity,
@@ -97,21 +97,21 @@ const ItineraryPage = () => {
                 };
 
                 // 3. Duyệt gọi API từng thành phố (chạy song song)
-                const weatherPromises = locations.map(async (city) => {
+                const weatherPromises = locations.map(async (city) => { // Mỗi 3 tiếng sẽ trả về 1 lần dữ liệu thời tiết mới
                     try {
                         const res = await fetchForecastByCity(city);
-                        
+
                         res.data.list.forEach(item => {
                             const date = item.dt_txt.split(' ')[0]; // Lấy chuỗi YYYY-MM-DD
                             const time = item.dt_txt.split(' ')[1]; // Lấy HH:MM:SS
-                            
+
                             if (!dailyWeather[date]) dailyWeather[date] = {};
 
                             // Lọc mốc 12h trưa mỗi ngày
                             if (time === '12:00:00' || !dailyWeather[date][city]) {
                                 dailyWeather[date][city] = {
                                     temp: Math.round(item.main.temp),
-                                    icon: item.weather[0].icon,       
+                                    icon: item.weather[0].icon,
                                     desc: item.weather[0].description,
                                     city: city
                                 };
@@ -145,7 +145,7 @@ const ItineraryPage = () => {
 
         // Kiểm tra xem ở ngày này người dùng đang có tour ở Thành phố nào không?
         const dayEvents = events.filter(e => e.start <= dateKey && e.end > dateKey);
-        
+
         let weatherContent = null;
 
         if (dayEvents.length > 0 && weatherMap[dateKey]) {
@@ -153,7 +153,7 @@ const ItineraryPage = () => {
             const targetCity = dayEvents[0].extendedProps?.location_name;
             const weather = weatherMap[dateKey][targetCity];
 
-            if (weather) {
+            if (weather) { // vẽ một khối nhỏ hiển thị nhiệt độ và icon thời tiết tại thành phố đó
                 const iconUrl = `https://openweathermap.org/img/wn/${weather.icon}.png`;
                 weatherContent = (
                     <div
@@ -199,7 +199,7 @@ const ItineraryPage = () => {
         // 1. Nếu là đơn hàng trong giỏ (màu cam, tiêu đề có [Giỏ hàng])
         if (status === 'cart' || title.includes('[Giỏ hàng]')) {
             navigate('/my-bookings', { state: { activeTab: 'cart' } });
-        } 
+        }
         // 2. Nếu là tour đã thanh toán hoặc chờ thanh toán (đã tạo booking)
         else {
             navigate('/my-bookings', { state: { activeTab: 'bookings' } });
@@ -227,12 +227,12 @@ const ItineraryPage = () => {
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
-            <PageBanner 
+            <PageBanner
                 title="Lịch Trình Chuyến Đi"
                 subtitle="Theo dõi các tour bạn đã đặt cùng dự báo thời tiết tại đúng địa điểm tour đó."
                 image={BANNER_IMAGE}
             />
-            
+
             <div className="max-w-7xl mx-auto px-4 py-12 relative z-10">
                 <div className="mt-2 mb-8 bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
                     <div className="text-center mb-5">

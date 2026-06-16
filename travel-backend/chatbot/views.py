@@ -16,7 +16,7 @@ except ImportError:
     Booking, Cart = None, None
 
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen2.5:1.5b')
+OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen2.5:7b')
 OLLAMA_TIMEOUT_CONNECT = 5    # Giây chờ kết nối đến Ollama
 OLLAMA_TIMEOUT_READ = 120     # Giây chờ đọc response (model có thể chậm)
 OLLAMA_MAX_RETRIES = 2        # Số lần thử lại tối đa
@@ -49,7 +49,7 @@ def _stream_ollama(ollama_messages):
         "messages": ollama_messages,
         "stream": True,
         "options": {
-            "temperature": 0.6,     # Thấp hơn → ít ngẫu nhiên → nhanh hơn
+            "temperature": 0.1,     # Thấp (0.1) → cực kỳ rập khuôn, bám sát luật để không quên TOUR_CARD
             "num_predict": 512,     # Giới hạn độ dài → trả lời ngắn gọn & nhanh
             "num_ctx": 2048,        # Cửa sổ context nhỏ → xử lý nhanh hơn
             "top_k": 20,            # Chỉ chọn từ 20 token tốt nhất → sampling nhanh
@@ -157,7 +157,7 @@ class ChatbotAPIView(APIView):
                 print(f"[RAG] Lỗi đọc file {dest.name}: {e}")
 
         # Nếu system_instruction trống hoặc không chứa danh sách tour, dựng lại prompt trực tiếp từ Database ở Backend!
-        if not system_instruction or "=== DANH SÁCH TOUR ĐANG CÓ ===" not in system_instruction:
+        if not system_instruction or "<DANH_SACH_TOUR>" not in system_instruction:
             print("[Chatbot] Khởi động bộ dựng System Prompt dự phòng tại Backend...")
             tours = Tour.objects.all()
             tours_text = "\n<DANH_SACH_TOUR>\n"
@@ -166,81 +166,31 @@ class ChatbotAPIView(APIView):
             else:
                 for t in tours:
                     loc = t.location.name if t.location else "N/A"
-                    tours_text += f"• Tên tour: {t.title} | Địa điểm: {loc} | ID: {t.id}\n"
+                    tours_text += f'<TOUR id="{t.id}" ten="{t.title}" dia_diem="{loc}" />\n'
             tours_text += "</DANH_SACH_TOUR>\n"
-
-            bookings_text = ""
-            cart_text = ""
-            user_status_text = "=== TRẠNG THÁI NGƯỜI DÙNG ===\n"
-
-            # Sử dụng request.user (được thiết lập do permission_classes = [IsAuthenticated])
-            if request.user and request.user.is_authenticated:
-                user_status_text += f"• Trạng thái: ĐÃ ĐĂNG NHẬP\n• Tên tài khoản: {request.user.username}\n• Email: {request.user.email}\n"
-
-                # Nạp lịch sử đặt hàng
-                if Booking:
-                    bookings = Booking.objects.filter(user=request.user)
-                    bookings_text = f"\n=== ĐƠN HÀNG CỦA {request.user.username.upper()} ===\n"
-                    if not bookings.exists():
-                        bookings_text += "Khách hiện chưa có đơn hàng nào trong lịch sử.\n"
-                    else:
-                        for b in bookings:
-                            tour_title = b.tour.title if b.tour else "N/A"
-                            bookings_text += (
-                                f"\n• Đơn #{b.id}: {tour_title}\n"
-                                f"  Ngày đi: {b.date} | Số người: {b.number_of_people}\n"
-                                f"  Tổng tiền: {int(b.total_price):,} VNĐ | Trạng thái: {b.status}\n"
-                            )
-
-                # Nạp giỏ hàng
-                if Cart:
-                    cart_items = Cart.objects.filter(user=request.user)
-                    cart_text = f"\n=== GIỎ HÀNG CỦA {request.user.username.upper()} (Chưa thanh toán) ===\n"
-                    if not cart_items.exists():
-                        cart_text += "Giỏ hàng hiện đang trống.\n"
-                    else:
-                        for item in cart_items:
-                            tour_title = item.tour.title if item.tour else "N/A"
-                            cart_text += (
-                                f"\n• [ID:{item.id}] {tour_title}\n"
-                                f"  Ngày dự kiến: {item.date or 'Chưa chọn'} | Số người: {item.number_of_people}\n"
-                                f"  Đơn giá: {int(item.tour.price):,} VNĐ | Thành tiền: {int(item.tour.price * item.number_of_people):,} VNĐ\n"
-                            )
-                        cart_text += "\nLưu ý: Đây là những tour khách đã thêm vào giỏ nhưng chưa thanh toán. Hãy khuyến khích họ đặt tour nếu họ đang phân vân.\n"
-            else:
-                user_status_text += "• Trạng thái: CHƯA ĐĂNG NHẬP (Khách vãng lai)\n• Quyền: Chỉ được xem tour, không có quyền truy cập thông tin cá nhân hay đơn hàng.\n"
 
             # Bản sao quy tắc hệ thống chuẩn của ChatbotUtils
             system_instruction = (
                 "Bạn là AI trợ lý du lịch của TravelBaMia.\n"
                 "Nhiệm vụ của bạn là trả lời khách hàng cực kỳ NGẮN GỌN, ĐI THẲNG VÀO Ý CHÍNH, KHÔNG VÒNG VO.\n\n"
                 "=== QUY TẮC BẮT BUỘC ===\n"
-                "1. Khách hỏi CÓ TOUR NÀO: CHỈ ĐƯỢC PHÉP đọc TÊN của các tour nằm trong phần <DANH_SACH_TOUR> bên dưới. Tuyệt đối không tự sáng tác tour. Liệt kê tối đa 3 tour, mỗi tour một dòng.\n"
-                "2. Cuối tên mỗi tour BẮT BUỘC gắn nhãn [TOUR_CARD:ID] (Ví dụ: 'Tour Đà Lạt [TOUR_CARD:1]'). KHÔNG giải thích, KHÔNG ghi giá hay thời gian.\n"
-                "3. Khách yêu cầu XEM CHI TIẾT / ĐẶT VÉ: Bắt buộc đồng ý và gửi [TOUR_CARD:ID]. Không được từ chối.\n\n"
+                "1. Khi khách chỉ chào hỏi: CHỈ ĐƯỢC PHÉP chào lại bằng 1 câu. TUYỆT ĐỐI KHÔNG đọc danh sách tour.\n"
+                "2. Khách hỏi DANH SÁCH TOUR (VD: 'Có tour nào không?', 'Tour Nha Trang'): CHỈ liệt kê thuộc tính 'ten' của các <TOUR> bằng gạch đầu dòng. TUYỆT ĐỐI KHÔNG in ra 'id'. KHÔNG dùng thẻ [TOUR_CARD].\n"
+                "3. Khách YÊU CẦU XEM CHI TIẾT (VD: 'cho tôi thông tin tour Fansipan'): Bắt buộc gọi tên tour và GẮN THẺ [TOUR_CARD:id] (Lấy id từ thuộc tính 'id' của thẻ <TOUR>). KHÔNG giải thích dài dòng.\n\n"
+                "=== VÍ DỤ CÁCH TRẢ LỜI (HÃY BẮT CHƯỚC Y HỆT) ===\n"
+                "Khách: 'Có tour Sa Pa nào không?'\n"
+                "AI: 'Bên mình có các tour Sa Pa sau:\n"
+                "• Khám Phá Bản Cát Cát\n"
+                "• Chinh Phục Đỉnh Fansipan'\n\n"
+                "Khách: 'Cho tôi xem chi tiết tour Cát Cát'\n"
+                "AI: 'Dạ đây là thông tin chi tiết của tour bạn yêu cầu: Khám Phá Bản Cát Cát [TOUR_CARD:3]'\n\n"
                 "=== QUY TẮC VỀ ĐỊA CHỈ & THÔNG TIN CÔNG CỘNG (QUAN TRỌNG) ===\n"
                 "1. Khi khách hàng hỏi về địa chỉ, thông tin cụ thể của các quán ăn, nhà hàng, khách sạn, danh lam thắng cảnh trong 'DỮ LIỆU ĐỊA ĐIỂM', bạn HOÀN TOÀN ĐƯỢC PHÉP và BẮT BUỘC phải cung cấp chính xác địa chỉ của chúng từ file tài liệu.\n"
                 "2. Tuyệt đối KHÔNG ĐƯỢC từ chối trả lời địa chỉ của các quán ăn, nhà hàng với lý do 'bảo mật' hay 'không được niêm phong' hay 'thông tin riêng tư/nhạy cảm'. Đó là thông tin du lịch công cộng hữu ích!\n\n"
-                "=== QUY TẮC XƯNG HÔ & BẢO MẬT (QUAN TRỌNG) ===\n"
-                "1. Kiểm tra mục 'TRẠNG THÁI NGƯỜI DÙNG' bên dưới để biết thông tin khách hàng.\n"
-                "2. Khi trạng thái là 'ĐÃ ĐĂNG NHẬP':\n"
-                "   - Bạn HOÀN TOÀN có quyền đọc và sử dụng tên tài khoản (username) hoặc email của họ.\n"
-                "   - LUÔN LUÔN chào hỏi và gọi họ bằng tên tài khoản của họ. Tuyệt đối KHÔNG ĐƯỢC từ chối và nói 'Tôi không có quyền truy cập thông tin cá nhân' khi họ hỏi tên của họ!\n"
-                "3. Khi trạng thái là 'CHƯA ĐĂNG NHẬP':\n"
-                "   - Yêu cầu họ đăng nhập để hỗ trợ các thông tin cá nhân hoặc giỏ hàng.\n\n"
-                "=== QUY TẮC CẤT GIẢM ĐỘ DÀI (BẮT BUỘC) ===\n"
-                "1. Trả lời ngay lập tức trọng tâm câu hỏi. KHÔNG có phần dẫn dắt dài dòng, không dùng từ thừa.\n"
-                "2. Giới hạn câu trả lời trong khoảng 2 - 4 câu ngắn hoặc danh sách tối đa 3 - 4 gạch đầu dòng.\n"
-                "3. KHÔNG chào hỏi lặp đi lặp lại dài dòng. Chỉ cần chào rất ngắn ở câu đầu tiên (ví dụ: 'Chào bạn, ...'), các câu sau đi thẳng vào trả lời.\n"
-                "4. KHÔNG viết kết luận, cảm ơn hay lời chúc sáo rỗng dài dòng ở cuối mỗi tin nhắn.\n\n"
-                "=== QUY TẮC TRÌNH BÀY ===\n"
-                "1. LUÔN LUÔN trình bày thông tin theo dạng gạch đầu dòng (•) súc tích để khách hàng dễ đọc lướt nhanh.\n"
-                "2. Mỗi gạch đầu dòng chỉ dài tối đa 1 dòng. Tránh các đoạn văn dài.\n\n"
                 "=== QUY TẮC CẤM (TUYỆT ĐỐI) ===\n"
                 "1. TUYỆT ĐỐI KHÔNG dùng nhãn [TASK_COMPLETE], [DONE], [SUCCESS]... trong câu trả lời.\n"
-                "2. CHỈ dùng [TOUR_CARD:ID] hoặc [ESCALATE] khi thật sự cần thiết.\n"
-                "3. Không trả lời về technical (mã nguồn, database, hoặc các vấn đề kỹ thuật khác).\n\n"
-                f"{user_status_text}{tours_text}{bookings_text}{cart_text}"
+                "2. Không trả lời về technical (mã nguồn, database, hoặc các vấn đề kỹ thuật khác).\n\n"
+                f"{tours_text}"
             )
 
         # --- Chuẩn bị messages cho Ollama ---
@@ -256,13 +206,20 @@ class ChatbotAPIView(APIView):
             if role in ("user", "assistant") and content:
                 ollama_messages.append({"role": role, "content": content})
 
-        # 3. User message + RAG context mới (nếu có)
         final_user_message = user_message
         if rag_context:
+            # Trích xuất danh sách tour từ system_instruction để nhét vào user_message (chống recency bias của model nhỏ)
+            tours_in_system = ""
+            start_idx = system_instruction.find("<DANH_SACH_TOUR>")
+            end_idx = system_instruction.find("</DANH_SACH_TOUR>")
+            if start_idx != -1 and end_idx != -1:
+                tours_in_system = system_instruction[start_idx:end_idx + len("</DANH_SACH_TOUR>")]
+                
             final_user_message = (
-                f"Dựa trên dữ liệu chính thức sau đây:\n{rag_context}\n\n"
-                f"Hãy trả lời câu hỏi: {user_message}\n"
-                f"(Yêu cầu: Lịch sự, tập trung ý chính, ngắn gọn, tiếng Việt)"
+                f"1. THÔNG TIN ĐỊA ĐIỂM (Không phải tour):\n{rag_context}\n\n"
+                f"2. DANH SÁCH TOUR TRONG HỆ THỐNG:\n{tours_in_system}\n\n"
+                f"CÂU HỎI CỦA KHÁCH: {user_message}\n\n"
+                f"(Gợi ý cho AI: Nếu khách hỏi tour, HÃY TÌM TRONG DANH SÁCH TOUR TRONG HỆ THỐNG. KHÔNG lấy thông tin địa điểm làm tour. Tuân thủ định dạng thẻ [TOUR_CARD:ID] ở Quy tắc Bắt buộc.)"
             )
 
         ollama_messages.append({"role": "user", "content": final_user_message})
@@ -300,7 +257,7 @@ class ChatbotAPIView(APIView):
                 "model": OLLAMA_MODEL,
                 "messages": ollama_messages,
                 "stream": False,
-                "options": {"temperature": 0.7, "num_predict": 1024}
+                "options": {"temperature": 0.1, "num_predict": 1024}
             }
             resp = requests.post(OLLAMA_URL, json=payload, timeout=(OLLAMA_TIMEOUT_CONNECT, OLLAMA_TIMEOUT_READ))
             resp.raise_for_status()
